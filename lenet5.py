@@ -11,18 +11,25 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(in_features=12*4*4, out_features=120)
         self.fc2 = nn.Linear(in_features=120, out_features=60)
         self.out = nn.Linear(in_features=60, out_features=10)
+        self.batchnorm1 = nn.BatchNorm2d(6)
+        self.batchnorm2 = nn.BatchNorm2d(12)
+        self.dropout = nn.Dropout2d(0.25)
 
   # define forward function
     def forward(self, t):
         # conv 1
         t = self.conv1(t)
+        t = self.batchnorm1(t)
         t = F.relu(t)
         t = F.max_pool2d(t, kernel_size=2, stride=2)
+        t = self.dropout(t)
 
         # conv 2
         t = self.conv2(t)
+        t = self.batchnorm2(t)
         t = F.relu(t)
         t = F.max_pool2d(t, kernel_size=2, stride=2)
+        t = self.dropout(t)
 
         # fc1
         t = t.reshape(-1, 12*4*4)

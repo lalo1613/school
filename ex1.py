@@ -9,8 +9,8 @@ from lenet5 import Net
 
 
 # setting directories
-dir_input = r"C:\Users\omri_\Downloads\FashionMNIST"+"\\"
-dir_uncompressed = r"C:\Users\omri_\Downloads\FashionMNIST\uncompressed"+"\\"
+dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST"+"\\"
+dir_uncompressed = r"C:\Users\Bengal\Downloads\FashionMNIST\uncompressed"+"\\"
 
 # uncompressing image files and moving them to separate directory (run once only!)
 # file_list = os.listdir(dir_input)
@@ -39,7 +39,7 @@ net = Net()
 
 # defining a Loss function and parameter optimizer
 criterion = torch.nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)   #, weight_decay=0.01)
 
 # training net
 for epoch in range(10):  # loop over the dataset multiple times
