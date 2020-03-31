@@ -1,13 +1,12 @@
 
-def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer):
+def Training_LENET(train_images, train_labels, dir_input ,NetName,
+                   optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)):
     import torch
     Net_dic = {'Net_None',  'Net_Dropout','Net_BatchNorm','Net_Dropout_BatchNorm'}
     net = NetName()
     # loading CNN (net's class defined in separate script)
     # defining a Loss function and parameter optimizer
-    if optimizer is None:
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-    else:
+    if optimizer != torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9):
         optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9 , weight_decay=0.01)
 
     criterion = torch.nn.CrossEntropyLoss()
