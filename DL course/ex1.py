@@ -1,7 +1,3 @@
-import gzip
-import os
-import re
-import shutil
 from mnist import MNIST
 import numpy as np
 import torch
@@ -42,9 +38,9 @@ criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)   #, weight_decay=0.01)
 
 # training net
-for epoch in range(10):  # loop over the dataset multiple times
+for epoch in range(20):  # loop over the dataset multiple times
     running_loss = 0.0
-    batch_size = 1000
+    batch_size = 10000
     for i in range(train_images.shape[0]//batch_size):
         # get the inputs; data is a list of [inputs, labels]
         inputs = train_images[(batch_size*i):(batch_size*(i+1))].apply_(float)
