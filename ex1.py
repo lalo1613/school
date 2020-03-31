@@ -8,7 +8,7 @@ import torch
 from lenet5 import Net
 
 
-# setting directories
+# setting directories now
 dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST"+"\\"
 dir_uncompressed = r"C:\Users\Bengal\Downloads\FashionMNIST\uncompressed"+"\\"
 
