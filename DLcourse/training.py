@@ -3,12 +3,13 @@ import numpy as np
 import pandas as pd
 
 
-def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer = None, n_epochs = 1):
+def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer_input = None, n_epochs = 1):
     Net_dic = {'Net_None',  'Net_Dropout','Net_BatchNorm','Net_Dropout_BatchNorm'}
     net = NetName()
     # loading CNN (net's class defined in separate script)
     # defining a Loss function and parameter optimizer
-    if optimizer is  None:
+    if optimizer_input is  None:
+        optimizer_input = ''
         optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9 , weight_decay=0.01)
@@ -18,7 +19,7 @@ def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer = N
     # training net
     for epoch in range(n_epochs):  # loop over the dataset multiple times
         running_loss = 0.0
-        batch_size = 1000
+        batch_size = 100
         for i in range(train_images.shape[0]//batch_size):
             # get the inputs; data is a list of [inputs, labels]
             inputs = train_images[(batch_size*i):(batch_size*(i+1))].apply_(float)
@@ -44,5 +45,5 @@ def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer = N
 
     print('Finished Training')
     print('acc', acc_epoc)
-    torch.save(net.state_dict(), dir_input+"outputs/"+NetName().__class__.__name__+".pth")
+    torch.save(net.state_dict(), dir_input+"outputs/"+NetName().__class__.__name__+optimizer_input+".pth")
     return pd.DataFrame(data = acc_epoc, columns = ['epoch','accuracy'])
