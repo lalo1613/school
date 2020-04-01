@@ -65,6 +65,8 @@ plt.plot( 'epoch', 'accuracy', data=acc_dropout_batch_norm, color='red', markers
 plt.plot( 'epoch', 'accuracy', data=acc_dropout_batch_norm_l2, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
 plt.plot( 'epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
 plt.plot( 'epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
 plt.legend()
 
 
