@@ -56,6 +56,7 @@ acc_batch_norm_l2 = Training_LENET(train_images = train_images, train_labels = t
 acc_dropout_batch_norm = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= None, n_epochs = 15)
 acc_dropout_batch_norm_l2 = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
 
+
 # Plots
 plt.plot('epoch', 'accuracy', data=acc_none, color='blue', markersize=12, linewidth=4, label= 'None')
 plt.plot( 'epoch', 'accuracy', data=acc_l2, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
@@ -83,7 +84,11 @@ acc_batch_norm_l2_tst = TestingNet(test_images = test_images, test_labels = test
 # print(acc_dropout_tst)
 # print(acc_dropout_batch_norm_tst)
 # print(acc_batch_norm_tst)
-print('Test Accuracy Comparrison: None : {0} , L2 : {1} ,Dropout : {2}, Dropout + L2 : {3}, Dropout +  BatchNorm : {4}, Dropout +  BatchNorm + L2 : {5}, BatchNorm : {6}, BatchNorm + L2 : {7}'.format(acc_none_tst,acc_l2_tst,acc_dropout_tst,acc_dropout_l2_tst,acc_dropout_batch_norm_tst,acc_dropout_batch_norm_l2_tst,acc_batch_norm_tst,acc_batch_norm_l2_tst))
+print('Test Accuracy Comparrison: None : {0} , \n'
+      'L2 : {1} ,Dropout : {2}, Dropout + L2 : {3}, \n'
+      'Dropout +  BatchNorm : {4}, \n'
+      'Dropout +  BatchNorm + L2 : {5}, \n'
+      'BatchNorm : {6}, BatchNorm + L2 : {7}'.format(acc_none_tst,acc_l2_tst,acc_dropout_tst,acc_dropout_l2_tst,acc_dropout_batch_norm_tst,acc_dropout_batch_norm_l2_tst,acc_batch_norm_tst,acc_batch_norm_l2_tst))
 # training net
 # for epoch in range(10):  # loop over the dataset multiple times
 #     running_loss = 0.0
