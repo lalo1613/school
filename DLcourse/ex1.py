@@ -58,13 +58,13 @@ acc_dropout_batch_norm_l2 = Training_LENET(train_images = train_images, train_la
 
 # Plots
 plt.plot('epoch', 'accuracy', data=acc_none, color='blue', markersize=12, linewidth=4, label= 'None')
-plt.plot( 'epoch', 'accuracy', data=acc_l2, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
-plt.plot( 'epoch', 'accuracy', data=acc_dropout, color='green', markersize=12, linewidth=4, label = 'Dropout')
-plt.plot( 'epoch', 'accuracy', data=acc_dropout_l2, color='green', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2')
-plt.plot( 'epoch', 'accuracy', data=acc_dropout_batch_norm, color='red', markersize=12, linewidth=4, label = 'Dropout + BatchNorm')
-plt.plot( 'epoch', 'accuracy', data=acc_dropout_batch_norm_l2, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
-plt.plot( 'epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
-plt.plot( 'epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
+plt.plot('epoch', 'accuracy', data=acc_l2, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout, color='green', markersize=12, linewidth=4, label = 'Dropout')
+plt.plot('epoch', 'accuracy', data=acc_dropout_l2, color='green', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm, color='red', markersize=12, linewidth=4, label = 'Dropout + BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
 plt.legend()
@@ -78,6 +78,27 @@ acc_dropout_batch_norm_tst = TestingNet(test_images = test_images, test_labels =
 acc_dropout_batch_norm_l2_tst = TestingNet(test_images = test_images, test_labels = test_labels, NetName = Net_Dropout_BatchNorm, dir_input = dir_input, optimizer_input = 'l2')
 acc_batch_norm_tst = TestingNet(test_images = test_images, test_labels = test_labels, NetName = Net_BatchNorm, dir_input = dir_input)
 acc_batch_norm_l2_tst = TestingNet(test_images = test_images, test_labels = test_labels, NetName = Net_BatchNorm, dir_input = dir_input, optimizer_input = 'l2')
+
+###############################################################
+
+train_acc_list = [acc_none.loc[14,'accuracy'],acc_l2.loc[14,'accuracy'],acc_dropout.loc[14,'accuracy'],
+                  acc_dropout_l2.loc[14,'accuracy'],acc_dropout_batch_norm.loc[14,'accuracy'],
+                  acc_dropout_batch_norm_l2.loc[14,'accuracy'], acc_batch_norm.loc[14,'accuracy'],
+                  acc_batch_norm_l2.loc[14,'accuracy']]
+
+test_acc_list = [acc_none_tst.loc[14,'accuracy'],acc_l2_tst.loc[14,'accuracy'],acc_dropout_tst.loc[14,'accuracy'],
+                 acc_dropout_l2_tst.loc[14,'accuracy'],acc_dropout_batch_norm_tst.loc[14,'accuracy'],
+                 acc_dropout_batch_norm_l2_tst.loc[14,'accuracy'], acc_batch_norm_tst.loc[14,'accuracy'],
+                 acc_batch_norm_l2_tst.loc[14,'accuracy']]
+
+methods = ['No Regularization,', 'L2', 'Dropout', 'Dropout + L2',
+           'Dropout +  BatchNorm', 'Dropout +  BatchNorm + L2',
+           'BatchNorm', 'BatchNorm + L2']
+
+acc_table = pd.DataFrame(zip(methods,train_acc_list,test_acc_list),columns=["Method","Final Train Accuracy","Final Test Accuracy"])
+print(acc_table)
+
+###############################################################
 
 print('Test Accuracy Comparrison: \n'
       'No Regularization : {0} , \n'
