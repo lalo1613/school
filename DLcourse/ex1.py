@@ -40,20 +40,20 @@ test_images = torch.tensor(test_images).float()
 test_labels = torch.tensor(test_labels)
 
 #  None
-acc_none = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= None, n_epochs = 15)
-acc_l2 = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= 'l2', n_epochs = 15)
+acc_none, acc_none_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= None, n_epochs = 15)
+acc_l2, acc_l2_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= 'l2', n_epochs = 15)
 
 # Dropout
-acc_dropout = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= None, n_epochs = 15)
-acc_dropout_l2 = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= 'l2', n_epochs = 15)
+acc_dropout, acc_dropout_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= None, n_epochs = 15)
+acc_dropout_l2,acc_dropout_l2_test = Training_LENET(train_images = train_images, train_labels = train_labels, test_images = test_images, test_labels = test_labels,dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= 'l2', n_epochs = 15)
 
 # BatchNorm
-acc_batch_norm = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= None, n_epochs = 15)
-acc_batch_norm_l2 = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
+acc_batch_norm,acc_batch_norm_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= None, n_epochs = 15)
+acc_batch_norm_l2,acc_batch_norm_l2_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
 
 # Dropout + BatchNorm
-acc_dropout_batch_norm = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= None, n_epochs = 15)
-acc_dropout_batch_norm_l2 = Training_LENET(train_images = train_images, train_labels = train_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
+acc_dropout_batch_norm,acc_dropout_batch_norm_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= None, n_epochs = 15)
+acc_dropout_batch_norm_l2,acc_dropout_batch_norm_l2_test = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
 
 
 # Plots
@@ -67,6 +67,7 @@ plt.plot('epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,
 plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
+plt.title('Training Accuracy Per Epoch')
 plt.legend()
 
 

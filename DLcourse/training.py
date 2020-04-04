@@ -3,9 +3,10 @@ import numpy as np
 import pandas as pd
 
 
-def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer_input = None, n_epochs = 1):
+def Training_LENET(train_images, train_labels,test_images, test_labels, dir_input ,NetName, optimizer_input = None, n_epochs = 1):
     Net_dic = {'Net_None',  'Net_Dropout','Net_BatchNorm','Net_Dropout_BatchNorm'}
     net = NetName()
+    test_images = test_images.reshape((test_images.shape[0], 1, test_images.shape[1], test_images.shape[1]))
     # loading CNN (net's class defined in separate script)
     # defining a Loss function and parameter optimizer
     if optimizer_input is  None:
@@ -16,6 +17,7 @@ def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer_inp
 
     criterion = torch.nn.CrossEntropyLoss()
     acc_epoc = []
+    acc_epoc_test = []
     # training net
     for epoch in range(n_epochs):  # loop over the dataset multiple times
         running_loss = 0.0
@@ -31,6 +33,7 @@ def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer_inp
 
             # forward + backward + optimize
             outputs = net(inputs)
+
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -41,9 +44,12 @@ def Training_LENET(train_images, train_labels, dir_input ,NetName, optimizer_inp
 
          #print('outputs',torch.argmax(input = outputs, dim = 1), 'labels', labels)
         acc_epoc.append([epoch,np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
+        outputs_test = net(test_images)
+        acc_epoc_test.append([epoch,np.mean(np.array(torch.argmax(input=outputs_test, dim=1)) == np.array(test_labels))])
         #acc_epoc = acc_epoc.append([epoch, np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
 
     print('Finished Training')
     print('acc', acc_epoc)
     torch.save(net.state_dict(), dir_input+"outputs/"+NetName().__class__.__name__+optimizer_input+".pth")
-    return pd.DataFrame(data = acc_epoc, columns = ['epoch','accuracy'])
+    return pd.DataFrame(data = acc_epoc, columns = ['epoch','accuracy']) , \
+           pd.DataFrame(data = acc_epoc_test, columns = ['epoch','accuracy'])
