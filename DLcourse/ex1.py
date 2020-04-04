@@ -59,43 +59,72 @@ acc_dropout_batch_norm_l2,acc_dropout_batch_norm_l2_tst = Training_LENET(train_i
 # Plots
 
 plt.plot('epoch', 'accuracy', data=acc_none, color='blue', markersize=12, linewidth=4, label= 'None')
-plt.plot('epoch', 'accuracy', data=acc_l2, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
-plt.plot('epoch', 'accuracy', data=acc_none_tst, color='blue', markersize=12, linewidth=4, label= 'None')
-plt.plot('epoch', 'accuracy', data=acc_l2_tst, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
+plt.plot('epoch', 'accuracy', data=acc_l2, color='red', markersize=12,linewidth=4,  label = 'L2')
+plt.plot('epoch', 'accuracy', data=acc_none_tst, color='blue', markersize=12, linewidth=4,linestyle='dashed', label= 'None Test')
+plt.plot('epoch', 'accuracy', data=acc_l2_tst, color='red', markersize=12,linewidth=4, linestyle='dashed', label = 'L2 Test')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
 plt.title('Training Accuracy Per Epoch')
 plt.legend()
 
 
+plt.plot('epoch', 'accuracy', data=acc_dropout, color='blue', markersize=12, linewidth=4, label = 'Dropout')
+plt.plot('epoch', 'accuracy', data=acc_dropout_l2, color='red', markersize=12, linewidth=4,  label = 'Dropout + L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout_tst, color='blue', markersize=12, linewidth=4,linestyle='dashed', label = 'Dropout Test')
+plt.plot('epoch', 'accuracy', data=acc_dropout_l2_tst, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2 Test')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.title('Training Accuracy Per Epoch')
+plt.legend()
+
+
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm, color='blue', markersize=12, linewidth=4, label= 'Dropout + BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2, color='red', markersize=12, linewidth=4,  label= 'Dropout + BatchNorm + L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_tst, color='blue', markersize=12, linewidth=4,linestyle='dashed', label = 'Dropout + BatchNorm Test')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2_tst, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2 Test')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.title('Training Accuracy Per Epoch')
+plt.legend()
+
+
+plt.plot('epoch', 'accuracy', data=acc_batch_norm, color='blue', markersize=12,linewidth=4, label = 'BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2, color='red', markersize=12, linewidth=4,  label= 'BatchNorm + L2')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm_tst, color='blue', markersize=12,linewidth=4,linestyle='dashed', label ='BatchNorm Test')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2_tst, color='red', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2 Test')
+plt.xlabel('epochs')
+plt.ylabel('accuracy')
+plt.title('Training Accuracy Per Epoch')
+plt.legend()
+
+#All Train Together
+plt.plot('epoch', 'accuracy', data=acc_none, color='blue', markersize=12, linewidth=4, label= 'None')
+plt.plot('epoch', 'accuracy', data=acc_l2, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
 plt.plot('epoch', 'accuracy', data=acc_dropout, color='green', markersize=12, linewidth=4, label = 'Dropout')
 plt.plot('epoch', 'accuracy', data=acc_dropout_l2, color='green', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2')
-plt.plot('epoch', 'accuracy', data=acc_dropout_tst, color='green', markersize=12, linewidth=4, label = 'Dropout')
-plt.plot('epoch', 'accuracy', data=acc_dropout_l2_tst, color='green', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2')
-plt.xlabel('epochs')
-plt.ylabel('accuracy')
-plt.title('Training Accuracy Per Epoch')
-plt.legend()
-
-
 plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm, color='red', markersize=12, linewidth=4, label = 'Dropout + BatchNorm')
 plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
-plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_tst, color='red', markersize=12, linewidth=4, label = 'Dropout + BatchNorm')
-plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2_tst, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
 plt.title('Training Accuracy Per Epoch')
 plt.legend()
 
-
-plt.plot('epoch', 'accuracy', data=acc_batch_norm, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
-plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
+#All Test Together
+plt.plot('epoch', 'accuracy', data=acc_none_tst, color='blue', markersize=12, linewidth=4, label= 'None')
+plt.plot('epoch', 'accuracy', data=acc_l2_tst, color='blue', markersize=12,linewidth=4, linestyle='dashed', label = 'L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout_tst, color='green', markersize=12, linewidth=4, label = 'Dropout')
+plt.plot('epoch', 'accuracy', data=acc_dropout_l2_tst, color='green', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + L2')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_tst, color='red', markersize=12, linewidth=4, label = 'Dropout + BatchNorm')
+plt.plot('epoch', 'accuracy', data=acc_dropout_batch_norm_l2_tst, color='red', markersize=12, linewidth=4, linestyle='dashed', label = 'Dropout + BatchNorm + L2')
 plt.plot('epoch', 'accuracy', data=acc_batch_norm_tst, color='brown', markersize=12,linewidth=4, label = 'BatchNorm')
 plt.plot('epoch', 'accuracy', data=acc_batch_norm_l2_tst, color='brown', markersize=12, linewidth=4, linestyle='dashed', label= 'BatchNorm + L2')
 plt.xlabel('epochs')
 plt.ylabel('accuracy')
-plt.title('Training Accuracy Per Epoch')
+plt.title('Testing Accuracy Per Epoch')
 plt.legend()
+
 
 
 # acc_none_tst = TestingNet(test_images = test_images, test_labels = test_labels, NetName = Net_None, dir_input = dir_input)
@@ -136,5 +165,22 @@ print('Test Accuracy Comparrison: \n'
       'Dropout +  BatchNorm : {4}, \n'
       'Dropout +  BatchNorm + L2 : {5}, \n'
       'BatchNorm : {6}, \n'
-      'BatchNorm + L2 : {7}'.format(acc_none_tst,acc_l2_tst,acc_dropout_tst,acc_dropout_l2_tst,acc_dropout_batch_norm_tst,acc_dropout_batch_norm_l2_tst,acc_batch_norm_tst,acc_batch_norm_l2_tst))
+      'BatchNorm + L2 : {7}'.format(acc_none_tst.loc[14,'accuracy'],acc_l2_tst.loc[14,'accuracy'],acc_dropout_tst.loc[14,'accuracy'],acc_dropout_l2_tst.loc[14,'accuracy'],acc_dropout_batch_norm_tst.loc[14,'accuracy'],acc_dropout_batch_norm_l2_tst.loc[14,'accuracy'],acc_batch_norm_tst.loc[14,'accuracy'],acc_batch_norm_l2_tst.loc[14,'accuracy']))
 
+
+
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# plt.plot('epoch', 'accuracy', data=pd.DataFrame({'epoch':[1,2,3],'accuracy':[4,5,6]}), color='blue', markersize=12, linewidth=4, label= 'None')
+# plt.plot('epoch', 'accuracy', data=pd.DataFrame({'epoch':[1,2,3],'accuracy':[4,5,6]}), color='red', markersize=12,linewidth=4, linestyle='dashed', label = 'L2 Test')
+# plt.xlabel('epochs')
+# plt.ylabel('accuracy')
+# plt.title('Training Accuracy Per Epoch')
+# plt.legend()
+#
+# plt.plot('epoch', 'accuracy', data=pd.DataFrame({'epoch':[1,2,3],'accuracy':[4,5,6]}), color='blue', markersize=12, linewidth=4, label= 'None')
+# plt.plot('epoch', 'accuracy', data=pd.DataFrame({'epoch':[1,2,3],'accuracy':[4,5,6]}), color='red', markersize=12,linewidth=4, linestyle='dashed', label = 'L2 Test')
+# plt.xlabel('epochs')
+# plt.ylabel('accuracy')
+# plt.title('Training Accuracy Per Epoch')
+# plt.legend()
