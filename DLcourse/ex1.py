@@ -82,10 +82,13 @@ acc_batch_norm_l2_tst = TestingNet(test_images = test_images, test_labels = test
 
 print('Test Accuracy Comparrison: \n'
       'No Regularization : {0} , \n'
-      'L2 : {1} ,Dropout : {2}, Dropout + L2 : {3}, \n'
+      'L2 : {1} ,\n'
+      'Dropout : {2}, \n'
+      'Dropout + L2 : {3}, \n'
       'Dropout +  BatchNorm : {4}, \n'
       'Dropout +  BatchNorm + L2 : {5}, \n'
-      'BatchNorm : {6}, BatchNorm + L2 : {7}'.format(acc_none_tst,acc_l2_tst,acc_dropout_tst,acc_dropout_l2_tst,acc_dropout_batch_norm_tst,acc_dropout_batch_norm_l2_tst,acc_batch_norm_tst,acc_batch_norm_l2_tst))
+      'BatchNorm : {6}, \n'
+      'BatchNorm + L2 : {7}'.format(acc_none_tst,acc_l2_tst,acc_dropout_tst,acc_dropout_l2_tst,acc_dropout_batch_norm_tst,acc_dropout_batch_norm_l2_tst,acc_batch_norm_tst,acc_batch_norm_l2_tst))
 
 # training net
 # for epoch in range(10):  # loop over the dataset multiple times
