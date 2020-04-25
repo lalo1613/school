@@ -165,7 +165,10 @@ print('Test Accuracy Comparrison: \n'
       'Dropout +  BatchNorm : {4}, \n'
       'Dropout +  BatchNorm + L2 : {5}, \n'
       'BatchNorm : {6}, \n'
-      'BatchNorm + L2 : {7}'.format(acc_none_tst.loc[14,'accuracy'],acc_l2_tst.loc[14,'accuracy'],acc_dropout_tst.loc[14,'accuracy'],acc_dropout_l2_tst.loc[14,'accuracy'],acc_dropout_batch_norm_tst.loc[14,'accuracy'],acc_dropout_batch_norm_l2_tst.loc[14,'accuracy'],acc_batch_norm_tst.loc[14,'accuracy'],acc_batch_norm_l2_tst.loc[14,'accuracy']))
+      'BatchNorm + L2 : {7}'.format(acc_none_tst.loc[14,'accuracy'],acc_l2_tst.loc[14,'accuracy'],
+                                    acc_dropout_tst.loc[14,'accuracy'],acc_dropout_l2_tst.loc[14,'accuracy'],
+                                    acc_dropout_batch_norm_tst.loc[14,'accuracy'],acc_dropout_batch_norm_l2_tst.loc[14,'accuracy'],
+                                    acc_batch_norm_tst.loc[14,'accuracy'],acc_batch_norm_l2_tst.loc[14,'accuracy']))
 
 
 
