@@ -16,7 +16,10 @@ class Net_LSTM(nn.Module):
     def __init__(self):
         super(Net_LSTM, self).__init__()
         # define layers
-        self.lstm = nn.LSTM(200,200)
+        self.lstm = nn.LSTM(200,200, dropout=0)
+        self.lstm_drop = nn.LSTM(200, 200, dropout=1)
+        self.gru = nn.GRU(200,200 , dropout=0)
+        self.gru_drop = nn.GRU(200, 200, dropout=1)
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=5)
         self.fc1 = nn.Linear(in_features=12*4*4, out_features=120)
         self.fc2 = nn.Linear(in_features=120, out_features=60)
