@@ -1,37 +1,27 @@
-import gzip
-import os
-import re
-import shutil
 import pandas as pd
-from mnist import MNIST
 import numpy as np
 import torch
-from DLcourse.lenet5 import Net_BatchNorm, Net_Dropout, Net_Dropout_BatchNorm, Net_None
-from DLcourse.training import Training_LENET
-from DLcourse.testing import TestingNet
+from DLcourse.RNN import Net_LSTM
+from DLcourse.training import Training_LSTM
 import matplotlib.pyplot as plt
-
+from nltk.tokenize import word_tokenize
+from nltk.stem.porter import PorterStemmer
+from nltk.corpus import stopwords
+from string import ascii_lowercase
+# # Following line opens the nltk downloader GUI from which one can download nltk resources.
+# from nltk import download; download()
+# # The needed recourses are the "stopwords" corpora and "punkt" package.
 
 
 # setting directories now
-dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
+dir_input = r"C:\Users\omri_\Downloads\PTB"+"\\"
+# dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
 
-#uncompressing image files and moving them to separate directory (run once only!)
-
-file_list = os.listdir(dir_input)
-
-from nltk.tokenize import word_tokenize
-from nltk.stem.porter import PorterStemmer
-import nltk
-from nltk.corpus import stopwords
-from string import punctuation, ascii_lowercase
-
-
-stemmer = PorterStemmer()
-stop_words = set(stopwords.words('english'))
-allowed_symbols = set(l for l in ascii_lowercase)
 
 def preprocess_sentence(sentence : str):
+    stemmer = PorterStemmer()
+    stop_words = set(stopwords.words('english'))
+    allowed_symbols = set(l for l in ascii_lowercase)
     output_sentence = []
     for word in word_tokenize(sentence):
         word = str(np.char.lower(word))
@@ -41,18 +31,13 @@ def preprocess_sentence(sentence : str):
                 tmp_word += letter
         word = tmp_word
 
-        if (word in stop_words):
-            next
-        else:
+        if word not in stop_words:
             word = stemmer.stem(word)
             if len(word) > 1:
                 output_sentence.append(word)
+
     return output_sentence
 
-# loading train and test data
-train = open(dir_input+'ptb.train.txt').read()
-valid = open(dir_input+'ptb.valid.txt').read()
-test = open(dir_input+'ptb.test.txt').read()
 
 def preprocess_dataset(dataset):
     dataset = dataset.split('\n')
@@ -68,41 +53,33 @@ def preprocess_dataset(dataset):
         dataset_fixed_te.append(tmp_output)
     return dataset_fixed_tr, dataset_fixed_te
 
-train_input,train_output = preprocess_dataset(train)
-valid_input,valid_output = preprocess_dataset(valid)
-test_input,test_output = preprocess_dataset(test)
-
-##################################################
-#   CREATE A DICTIONARY
 
 def Vocab(sentence, Vocabulary):
     n = len(Vocabulary)
     for word in sentence:
-        if word in Vocabulary:
-            next;
-        else:
+        if word not in Vocabulary:
             Vocabulary[word] = n
             n += 1
     return Vocabulary
 
-Vocabulary_Dict = {'SOS':0,'EOS':1}
-for i in train_input:
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-for i in train_output:
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-for i in valid_input:
-    print(i)
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-for i in valid_output:
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-for i in test_input:
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-for i in test_output:
-    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
-##################################################
 
-# אני פה עכשיו!!
-#   REPLACE WORDS WITH DICTIONARY KEYS
+def create_vocabulary_dict():
+    Vocabulary_Dict = {'SOS': 0, 'EOS': 1}
+    for i in train_input:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    for i in train_output:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    for i in valid_input:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    for i in valid_output:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    for i in test_input:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    for i in test_output:
+        Vocabulary_Dict = Vocab(i, Vocabulary_Dict)
+    return Vocabulary_Dict
+
+
 def replace_words_nums(dataset):
     dataset_numbers = []
     for sentence in dataset:
@@ -112,6 +89,20 @@ def replace_words_nums(dataset):
         dataset_numbers.append(sentence_tmp)
     return dataset_numbers
 
+# load data:
+train = open(dir_input+'ptb.train.txt').read()
+valid = open(dir_input+'ptb.valid.txt').read()
+test = open(dir_input+'ptb.test.txt').read()
+
+# preproccess data:
+train_input, train_output = preprocess_dataset(train)
+valid_input, valid_output = preprocess_dataset(valid)
+test_input, test_output = preprocess_dataset(test)
+
+# creating vocabulary dictionary:
+Vocabulary_Dict = create_vocabulary_dict()
+
+# Replace strings with numbers:
 train_input_numbers = replace_words_nums(train_input)
 train_output_numbers = replace_words_nums(train_output)
 valid_input_numbers = replace_words_nums(valid_input)
@@ -119,34 +110,24 @@ valid_output_numbers = replace_words_nums(valid_output)
 test_input_numbers = replace_words_nums(test_input)
 test_output_numbers = replace_words_nums(test_output)
 
-
+# ***temporary***
+temp = pd.DataFrame(train_input_numbers)
+temp = torch.Tensor(np.array(temp)).float()
+temp.shape  # this should be 3-dimensional for some reason
+train_input_numbers = temp[None, :, :]
+train_input_numbers.shape
 
 # saving train and test data as torch tensors
-train_input_numbers = torch.FloatTensor(train_input_numbers).float()
-train_output_numbers = torch.tensor(train_output_numbers).float()
-test_input_numbers = torch.tensor(test_input_numbers).float()
-test_output_numbers = torch.tensor(test_output_numbers)
-
+# train_input_numbers = torch.FloatTensor(train_input_numbers).float()
+# train_output_numbers = torch.tensor(train_output_numbers).float()
+# test_input_numbers = torch.tensor(test_input_numbers).float()
+# test_output_numbers = torch.tensor(test_output_numbers)
 
 #  LSTM
-percp_train, percp_val = Training_LENET(train_input = train_input_numbers, train_output = train_output_numbers,test_input = valid_input_numbers, test_output = valid_output_numbers, dir_input = dir_input ,NetName = Net_LSTM, n_epochs = 1)
-acc_l2, acc_l2_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= 'l2', n_epochs = 15)
-
-# Dropout
-acc_dropout, acc_dropout_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= None, n_epochs = 15)
-acc_dropout_l2,acc_dropout_l2_tst = Training_LENET(train_images = train_images, train_labels = train_labels, test_images = test_images, test_labels = test_labels,dir_input = dir_input ,NetName = Net_Dropout,optimizer_input= 'l2', n_epochs = 15)
-
-# BatchNorm
-acc_batch_norm,acc_batch_norm_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= None, n_epochs = 15)
-acc_batch_norm_l2,acc_batch_norm_l2_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
-
-# Dropout + BatchNorm
-acc_dropout_batch_norm,acc_dropout_batch_norm_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= None, n_epochs = 15)
-acc_dropout_batch_norm_l2,acc_dropout_batch_norm_l2_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_Dropout_BatchNorm,optimizer_input= 'l2', n_epochs = 15)
+percp_train, percp_val = Training_LSTM(train_input=train_input_numbers, train_output=train_output_numbers,test_input=valid_input_numbers, test_output=valid_output_numbers, dir_input=dir_input ,NetName =Net_LSTM, n_epochs = 1)
 
 
 # Plots
-
 plt.plot('epoch', 'accuracy', data=acc_none, color='blue', markersize=12, linewidth=4, label= 'None')
 plt.plot('epoch', 'accuracy', data=acc_l2, color='red', markersize=12,linewidth=4,  label = 'L2')
 plt.plot('epoch', 'accuracy', data=acc_none_tst, color='blue', markersize=12, linewidth=4,linestyle='dashed', label= 'None Test')

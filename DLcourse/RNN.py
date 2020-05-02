@@ -16,7 +16,7 @@ class Net_LSTM(nn.Module):
     def __init__(self):
         super(Net_LSTM, self).__init__()
         # define layers
-        self.lstm = nn.LSTM(200,200, dropout=0)
+        self.lstm = nn.LSTM(50,200, dropout=0)
         self.lstm_drop = nn.LSTM(200,hidden_size=2, dropout=0.5)
         self.gru = nn.GRU(200,200 , dropout=0)
         self.gru_drop = nn.GRU(200, 200, dropout=0.5)
