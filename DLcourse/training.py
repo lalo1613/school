@@ -1,6 +1,8 @@
 import torch
 import numpy as np
 import pandas as pd
+import torch.nn.functional as F
+
 
 
 def Training_LENET(train_images, train_labels,test_images, test_labels, dir_input ,NetName, optimizer_input = None, n_epochs = 1):
@@ -9,13 +11,12 @@ def Training_LENET(train_images, train_labels,test_images, test_labels, dir_inpu
     test_images = test_images.reshape((test_images.shape[0], 1, test_images.shape[1], test_images.shape[1]))
     # loading CNN (net's class defined in separate script)
     # defining a Loss function and parameter optimizer
-    if optimizer_input is  None:
-        optimizer_input = ''
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
-    else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9 , weight_decay=0.01)
+    #if optimizer_input is  None:
+    optimizer_input = ''
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+    #else:
+    #    optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9 , weight_decay=0.01)
 
-    criterion = torch.nn.CrossEntropyLoss()
     acc_epoc = []
     acc_epoc_test = []
     # training net
@@ -33,8 +34,13 @@ def Training_LENET(train_images, train_labels,test_images, test_labels, dir_inpu
 
             # forward + backward + optimize
             outputs = net(inputs)
+            # getting loss using cross entropy
+            loss = F.cross_entropy(outputs, labels)
 
-            loss = criterion(outputs, labels)
+            # calculating perplexity
+            perplexity = torch.exp(loss)
+            print('Loss:', loss, 'PP:', perplexity)
+
             loss.backward()
             optimizer.step()
 
@@ -43,13 +49,17 @@ def Training_LENET(train_images, train_labels,test_images, test_labels, dir_inpu
             #print("loss "+str(running_loss/(i+1)))
 
          #print('outputs',torch.argmax(input = outputs, dim = 1), 'labels', labels)
-        acc_epoc.append([epoch,np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
+        #acc_epoc.append([epoch,np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
+        acc_epoc.append([epoch,running_loss])
         outputs_test = net(test_images)
-        acc_epoc_test.append([epoch,np.mean(np.array(torch.argmax(input=outputs_test, dim=1)) == np.array(test_labels))])
+        loss = F.cross_entropy(outputs_test, test_labels)
+        # calculating perplexity
+        perplexity = torch.exp(loss)
+        acc_epoc_test.append([epoch,perplexity])
         #acc_epoc = acc_epoc.append([epoch, np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
 
     print('Finished Training')
     print('acc', acc_epoc)
     torch.save(net.state_dict(), dir_input+"outputs/"+NetName().__class__.__name__+optimizer_input+".pth")
-    return pd.DataFrame(data = acc_epoc, columns = ['epoch','accuracy']) , \
-           pd.DataFrame(data = acc_epoc_test, columns = ['epoch','accuracy'])
+    return pd.DataFrame(data = acc_epoc, columns = ['epoch','perplexity']) , \
+           pd.DataFrame(data = acc_epoc_test, columns = ['epoch','perplexity'])

@@ -20,24 +20,115 @@ dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
 
 file_list = os.listdir(dir_input)
 
+from nltk.tokenize import word_tokenize
+from nltk.stem.porter import PorterStemmer
+import nltk
+from nltk.corpus import stopwords
+from string import punctuation, ascii_lowercase
+
+
+stemmer = PorterStemmer()
+stop_words = set(stopwords.words('english'))
+allowed_symbols = set(l for l in ascii_lowercase)
+
+def preprocess_sentence(sentence : str):
+    output_sentence = []
+    for word in word_tokenize(sentence):
+        word = str(np.char.lower(word))
+        tmp_word = ''
+        for letter in word:
+            if letter in allowed_symbols:
+                tmp_word += letter
+        word = tmp_word
+
+        if (word in stop_words):
+            next
+        else:
+            word = stemmer.stem(word)
+            if len(word) > 1:
+                output_sentence.append(word)
+    return output_sentence
+
 # loading train and test data
-train = open(dir_input+'ptb.train.txt')
-valid = open(dir_input+'ptb.valid.txt')
-test = open(dir_input+'ptb.test.txt')
+train = open(dir_input+'ptb.train.txt').read()
+valid = open(dir_input+'ptb.valid.txt').read()
+test = open(dir_input+'ptb.test.txt').read()
+
+def preprocess_dataset(dataset):
+    dataset = dataset.split('\n')
+    dataset_fixed_tr = []
+    dataset_fixed_te = []
+    for i in dataset:
+        tmp = preprocess_sentence(i)
+        tmp_input = tmp[:-1]
+        tmp_input.insert(0,'SOS')
+        tmp_output = tmp[1:]
+        tmp_output.append('EOS')
+        dataset_fixed_tr.append(tmp_input)
+        dataset_fixed_te.append(tmp_output)
+    return dataset_fixed_tr, dataset_fixed_te
+
+train_input,train_output = preprocess_dataset(train)
+valid_input,valid_output = preprocess_dataset(valid)
+test_input,test_output = preprocess_dataset(test)
+
+##################################################
+#   CREATE A DICTIONARY
+
+def Vocab(sentence, Vocabulary):
+    n = len(Vocabulary)
+    for word in sentence:
+        if word in Vocabulary:
+            next;
+        else:
+            Vocabulary[word] = n
+            n += 1
+    return Vocabulary
+
+Vocabulary_Dict = {'SOS':0,'EOS':1}
+for i in train_input:
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+for i in train_output:
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+for i in valid_input:
+    print(i)
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+for i in valid_output:
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+for i in test_input:
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+for i in test_output:
+    Vocabulary_Dict = Vocab(i,Vocabulary_Dict)
+##################################################
+
+# אני פה עכשיו!!
+#   REPLACE WORDS WITH DICTIONARY KEYS
+Vocabulary_Dict.items()
+train_input_numbers = []
+train_input_numbers.shape() = train_input.shape()
+for index_sen, sentence in enumerate(train_input):
+    for index_word, word in enumerate(sentence):
+
+
+for i in Vocabulary_Dict.keys():
+    test_input[0][0].replace(i,str(Vocabulary_Dict[i]))
+
+    train_input[i] = train_input[i].replace()
+
 
 
 # reshaping images into 2d arrays
-train_images = np.array(train).reshape((60000,28,28))
-test_images = np.array(test).reshape((10000,28,28))
+#train_images = np.array(train).reshape((60000,28,28))
+#test_images = np.array(test).reshape((10000,28,28))
 
 # saving train and test data as torch tensors
-train_images = torch.tensor(train_images).float()
-train_labels = torch.tensor(train_labels)
-test_images = torch.tensor(test_images).float()
-test_labels = torch.tensor(test_labels)
+#train_images = torch.tensor(train_images).float()
+#train_labels = torch.tensor(train_labels)
+#test_images = torch.tensor(test_images).float()
+#test_labels = torch.tensor(test_labels)
 
-#  None
-acc_none, acc_none_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= None, n_epochs = 15)
+#  LSTM
+percp_train, percp_val = Training_LENET(train_images = train,test_images = val, dir_input = dir_input ,NetName = LSTM,optimizer_input= None, n_epochs = 15)
 acc_l2, acc_l2_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= 'l2', n_epochs = 15)
 
 # Dropout
