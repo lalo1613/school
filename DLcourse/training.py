@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 
-def Training_LSTM(train_input, train_output,test_input, test_output, dir_input ,NetName, n_epochs = 1):
+def Training_LSTM(train_input, train_output, test_input, test_output, dir_input ,NetName, n_epochs = 1):
     Net_dic = {'Net_None',  'Net_Dropout','Net_BatchNorm','Net_Dropout_BatchNorm'}
     net = NetName()
 
