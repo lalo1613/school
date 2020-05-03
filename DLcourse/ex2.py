@@ -121,15 +121,13 @@ Vocabulary_Dict = create_vocabulary_dict()
 train_input_formatted, train_output_formatted, train_lengths = format_to_torch(train_input, train_output)
 
 # temp
-lstm = torch.nn.LSTM(input_size=1, hidden_size=200, num_layers=2)
+lstm = torch.nn.LSTM(input_size=50, hidden_size=200, num_layers=2)
 hidden = torch.randn(2,train_input_formatted.shape[0],200)
-# fix that doesn't work:
-hidden = hidden[None,:,:,:]
 
 word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=1)
 X = word_embedding(train_input_formatted)  # sloppy cause I'm lazy
 X = torch.nn.utils.rnn.pack_padded_sequence(X, train_lengths, batch_first=True)
-X, hidden = lstm(X, hidden)
+X, hidden = lstm(X)
 X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
 
 
