@@ -13,8 +13,8 @@ from string import ascii_lowercase
 
 
 # setting directories now
-dir_input = r"C:\Users\omri_\Downloads\PTB"+"\\"
-# dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
+#dir_input = r"C:\Users\omri_\Downloads\PTB"+"\\"
+dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
 
 
 def preprocess_sentence(sentence : str):
@@ -119,19 +119,28 @@ test_input, test_output = preprocess_dataset(test)
 Vocabulary_Dict = create_vocabulary_dict()
 
 train_input_formatted, train_output_formatted, train_lengths = format_to_torch(train_input, train_output)
+valid_input_formatted, valid_output_formatted, valid_lengths = format_to_torch(valid_input, valid_output)
+test_input_formatted, test_output_formatted, test_lengths = format_to_torch(test_input, test_output)
 
 # temp
-lstm = torch.nn.LSTM(input_size=50, hidden_size=200, num_layers=2)
+lstm = torch.nn.LSTM(input_size=1, hidden_size=200, num_layers=2, batch_first=True)
 hidden = torch.randn(2,train_input_formatted.shape[0],200)
 
 word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=1)
-X = word_embedding(train_input_formatted)  # sloppy cause I'm lazy
+X = word_embedding(train_input_formatted)  # sloppy cause I'm lazy      # every sentence is embedded to 50 len vector (as it was before so why?)
+train_input_formatted.size() #[42069, 50]
+X.size()    #[42069, 50, 1]
 X = torch.nn.utils.rnn.pack_padded_sequence(X, train_lengths, batch_first=True)
 X, hidden = lstm(X)
 X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
 
 
-# temp
+X.size()
+len(train_input_formatted)
+len(train_input.count())
+len(train_input)
 
-#net = Training_LSTM(train_input_formatted, train_output_formatted, train_lengths)
+
+# temp
+net = Training_LSTM(dir_input = dir_input,train_input=train_input_formatted, train_output=train_output_formatted, test_input=valid_input_formatted,test_output=valid_output_formatted,dataset_lengths = train_lengths,vocabulary=Vocabulary_Dict,NetName=Net_LSTM)
 

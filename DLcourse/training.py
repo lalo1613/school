@@ -5,9 +5,9 @@ import torch.nn.functional as F
 
 
 
-def Training_LSTM(train_input, train_output, test_input, test_output, dir_input ,NetName, n_epochs = 1):
-    Net_dic = {'Net_None',  'Net_Dropout','Net_BatchNorm','Net_Dropout_BatchNorm'}
-    net = NetName()
+def Training_LSTM(train_input, train_output, test_input, test_output, dir_input ,NetName,dataset_lengths,vocabulary, n_epochs = 1):
+    Net_dic = {'Net_LSTM',  'Net_LSTM_drop','Net_GRU','Net_GRU_drop'}
+    net = NetName(vocabulary = vocabulary, dataset_lengths = dataset_lengths)
 
     optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
     #else:
@@ -29,7 +29,7 @@ def Training_LSTM(train_input, train_output, test_input, test_output, dir_input 
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            preds = net(inputs)
+            preds = net(inputs,vocabulary, dataset_lengths)
             # getting loss using cross entropy
             loss = F.cross_entropy(preds, outputs)
 
@@ -47,7 +47,7 @@ def Training_LSTM(train_input, train_output, test_input, test_output, dir_input 
          #print('outputs',torch.argmax(input = outputs, dim = 1), 'labels', labels)
         #acc_epoc.append([epoch,np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
         acc_epoc.append([epoch,running_loss])
-        outputs_test = net(test_input)
+        outputs_test = net(test_input, vocabulary, dataset_lengths)
         loss = F.cross_entropy(outputs_test, test_output)
         # calculating perplexity
         perplexity = torch.exp(loss)

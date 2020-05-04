@@ -4,18 +4,23 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-class NetLSTM(nn.Module):
-    def __init__(self, vocabulary):
-        super(NetLSTM, self).__init__()
+class Net_LSTM(nn.Module):
+    def __init__(self, vocabulary, dataset_lengths):
+        super(Net_LSTM, self).__init__()
         # define layers
-        self.lstm = nn.LSTM(input_size=50, hidden_size=200, num_layers=2)
-        self.word_embedding = nn.Embedding(num_embeddings=vocabulary.__len__(), embedding_dim=3)
+        self.lstm = nn.LSTM(input_size=1, hidden_size=200, num_layers=2, batch_first=True)
+        self.word_embedding = nn.Embedding(num_embeddings=len(vocabulary), embedding_dim=1)
+        self.hidden = torch.randn(2,42069,200)
+        self.dataset_lengths = dataset_lengths
 
-    def forward(self, input_list, input_lengths, hidden):
+
+
+    def forward(self, input_list, dataset_lengths):
+
 
         X = self.word_embedding(input_list)  # sloppy cause I'm lazy
-        X = torch.nn.utils.rnn.pack_padded_sequence(X, input_lengths, batch_first=True)
-        X, hidden = self.lstm(X, hidden)
+        X = torch.nn.utils.rnn.pack_padded_sequence(X, dataset_lengths, batch_first=True)
+        X, hidden = self.lstm(X, self.hidden)
         X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
 
         return X, hidden
@@ -26,7 +31,7 @@ class NetLSTM(nn.Module):
 
 class Net_LSTM_drop(nn.Module):
     def __init__(self):
-        super(Net_LSTM, self).__init__()
+        super(Net_LSTM_drop, self).__init__()
         # define layers
         self.lstm = nn.LSTM(200,200, dropout=0)
         self.lstm_drop = nn.LSTM(200,hidden_size=2, dropout=0.5)
@@ -57,7 +62,7 @@ class Net_LSTM_drop(nn.Module):
 
 class Net_GRU(nn.Module):
     def __init__(self):
-        super(Net_LSTM, self).__init__()
+        super(Net_GRU, self).__init__()
         # define layers
         self.lstm = nn.LSTM(200,200, dropout=0)
         self.lstm_drop = nn.LSTM(200,hidden_size=2, dropout=0.5)
@@ -87,7 +92,7 @@ class Net_GRU(nn.Module):
 
 class Net_GRU_drop(nn.Module):
     def __init__(self):
-        super(Net_LSTM, self).__init__()
+        super(Net_GRU_drop, self).__init__()
         # define layers
         self.lstm = nn.LSTM(200,200, dropout=0)
         self.lstm_drop = nn.LSTM(200,hidden_size=2, dropout=0.5)
