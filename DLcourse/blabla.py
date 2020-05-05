@@ -86,17 +86,43 @@ test = open(dir_input+'ptb.test.txt').read()
 """""
 import chainer
 import numpy as np
-ptb_dict = chainer.datasets.get_ptb_words_vocabulary()
-train, val, test = chainer.datasets.get_ptb_words()
-vocabulary_size =len(ptb_dict)
 
+dir_input = r"C:\\Users\\Bengal\Downloads\PTB"+"\\"
+train = open(dir_input+'ptb.train.txt').read().replace('\n','<eos>').split(' ')
+valid = open(dir_input+'ptb.valid.txt').read().replace('\n','<eos>').split(' ')
+test = open(dir_input+'ptb.test.txt').read().replace('\n','<eos>').split(' ')
+
+def Vocab(sentence, Vocabulary):
+    for word in sentence:
+        if word not in Vocabulary:
+            Vocabulary[word] = len(Vocabulary)
+    return Vocabulary
+
+ptb_dict = Vocab(train,{})
+ptb_dict = Vocab(valid,ptb_dict)
+ptb_dict = Vocab(test,ptb_dict)
+len(ptb_dict)
+
+def replace_words_nums(sentence):
+    sentence_tmp = []
+    for word in sentence:
+        sentence_tmp.append(ptb_dict[word])
+    return sentence_tmp
+
+train = np.array(replace_words_nums(train))
+val = np.array(replace_words_nums(valid))
+test = np.array(replace_words_nums(test))
+
+#ptb_dict = chainer.datasets.get_ptb_words_vocabulary()
+#train, val, test = chainer.datasets.get_ptb_words()
+vocabulary_size =len(ptb_dict)
 # Make it pytorch
 data_train=torch.LongTensor(train.astype(np.int64))
 data_valid=torch.LongTensor(val.astype(np.int64))
 data_test=torch.LongTensor(test.astype(np.int64))
 
 # Make batches
-batch_size = 20
+batch_size = 50
 num_batches=data_train.size(0)//batch_size         # Get number of batches
 data_train=data_train[:num_batches*batch_size]     # Trim last elements
 data_train=data_train.view(batch_size,-1)          # Reshape
