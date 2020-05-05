@@ -101,7 +101,6 @@ def Vocab(sentence, Vocabulary):
 ptb_dict = Vocab(train,{})
 ptb_dict = Vocab(valid,ptb_dict)
 ptb_dict = Vocab(test,ptb_dict)
-len(ptb_dict)
 
 def replace_words_nums(sentence):
     sentence_tmp = []
@@ -115,6 +114,7 @@ test = np.array(replace_words_nums(test))
 
 #ptb_dict = chainer.datasets.get_ptb_words_vocabulary()
 #train, val, test = chainer.datasets.get_ptb_words()
+
 vocabulary_size =len(ptb_dict)
 # Make it pytorch
 data_train=torch.LongTensor(train.astype(np.int64))
@@ -122,7 +122,7 @@ data_valid=torch.LongTensor(val.astype(np.int64))
 data_test=torch.LongTensor(test.astype(np.int64))
 
 # Make batches
-batch_size = 50
+batch_size = 35
 num_batches=data_train.size(0)//batch_size         # Get number of batches
 data_train=data_train[:num_batches*batch_size]     # Trim last elements
 data_train=data_train.view(batch_size,-1)          # Reshape
