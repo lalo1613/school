@@ -138,6 +138,9 @@ for epoch in range(500):
     log_probs, hidden = net(train_input_formatted[:10], train_lengths[:10], hidden)
     log_probs.shape
     loss_function(log_probs,train_output_formatted[:10])
+
+
+
 # net temp
 
 # context_size = 50; em_dim = 3
@@ -157,4 +160,3 @@ for epoch in range(500):
 #
 #
 # # temp
-
