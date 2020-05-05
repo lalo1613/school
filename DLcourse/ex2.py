@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 import torch
-from DLcourse.ex2_training import Training_LSTM
-import matplotlib.pyplot as plt
+from DLcourse.RNN import NetLSTM
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
@@ -120,18 +119,42 @@ Vocabulary_Dict = create_vocabulary_dict()
 
 train_input_formatted, train_output_formatted, train_lengths = format_to_torch(train_input, train_output)
 
-# temp
-lstm = torch.nn.LSTM(input_size=50, hidden_size=200, num_layers=2)
-hidden = torch.randn(2,train_input_formatted.shape[0],200)
-
-word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=1)
-X = word_embedding(train_input_formatted)  # sloppy cause I'm lazy
-X = torch.nn.utils.rnn.pack_padded_sequence(X, train_lengths, batch_first=True)
-X, hidden = lstm(X)
-X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
+# train temp
+def argmax_word(log_probs):
+    argmax_vec = torch.Tensor()
+    for sentence in range(log_probs.size[0]):
+        for word in range(log_probs.size[1]):
+            argmax_vec[sentence,word] = log_probs[sentence,word].argmax()
 
 
-# temp
+loss_function = torch.nn.NLLLoss()
+net = NetLSTM(vocabulary=Vocabulary_Dict, hidden_size=200, embd_dim=3)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+batch_size = 100
+hidden = None
 
-#net = Training_LSTM(train_input_formatted, train_output_formatted, train_lengths)
+for epoch in range(500):
+    optimizer.zero_grad()
+    log_probs, hidden = net(train_input_formatted[:10], train_lengths[:10], hidden)
+    log_probs.shape
+    loss_function(log_probs,train_output_formatted[:10])
+# net temp
+
+# context_size = 50; em_dim = 3
+#
+# hidden = None
+# lstm = torch.nn.LSTM(input_size=3, hidden_size=200, num_layers=2)
+# word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=3)
+# lin = torch.nn.Linear(200, len(Vocabulary_Dict))
+# F = torch.nn.functional
+#
+# embedded_input = word_embedding(train_input_formatted[:10])
+# X = torch.nn.utils.rnn.pack_padded_sequence(embedded_input, train_lengths[:10], batch_first=True)
+# X, hidden = lstm(X, hidden)
+# X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
+# X = lin(X)
+# log_probs = F.softmax(X, 1)
+#
+#
+# # temp
 
