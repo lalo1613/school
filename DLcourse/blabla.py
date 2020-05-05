@@ -9,20 +9,25 @@ import torch
 
 class BasicRNNLM(torch.nn.Module):
 
-    def __init__(self,vocabulary_size):
+    def __init__(self,vocabulary_size,with_drops,method):
         super(BasicRNNLM,self).__init__()
 
         # Configuration of our model
         self.num_layers=2
-        embedding_size=650
-        self.hidden_size=650
+        embedding_size=200
+        self.hidden_size=200
         dropout_prob=0.5
-
+        self.with_drops = with_drops
+        self.method = method
         # Define embedding layer
         self.embed=torch.nn.Embedding(vocabulary_size,embedding_size)
 
         # Define LSTM
         self.lstm=torch.nn.LSTM(embedding_size,self.hidden_size,self.num_layers,dropout=dropout_prob,batch_first=True)
+
+        # Define GRU
+        self.gru=torch.nn.GRU(embedding_size,self.hidden_size,self.num_layers,dropout=dropout_prob,batch_first=True)
+
 
         # Define dropout
         self.drop=torch.nn.Dropout(dropout_prob)
@@ -42,9 +47,14 @@ class BasicRNNLM(torch.nn.Module):
         # Apply embedding (encoding)
         y=self.embed(x)
         # Run LSTM
-        y=self.drop(y)
-        y,h=self.lstm(y,h)
-        y=self.drop(y)
+        if self.with_drops == True:
+            y=self.drop(y)
+        if self.method == 'LSTM':
+            y,h=self.lstm(y,h)
+        else:
+            y,h=self.gru(y,h)
+        if self.with_drops == True:
+            y=self.drop(y)
         # Reshape
         y=y.contiguous().reshape(-1,self.hidden_size)
         # Fully-connected (decoding)
@@ -104,13 +114,16 @@ data_test=data_test.view(batch_size,-1)
 print ('Init...')
 learning_rate = 0.1
 # Instantiate and init the model, and move it to the GPU
-model=BasicRNNLM(vocabulary_size)#.cuda()
+model_LSTM  =BasicRNNLM(vocabulary_size=vocabulary_size,with_drops=False,method='LSTM')#.cuda()
+model_LSTM_drop  =BasicRNNLM(vocabulary_size=vocabulary_size,with_drops=True,method='LSTM')#.cuda()
+model_GRU  =BasicRNNLM(vocabulary_size=vocabulary_size,with_drops=False,method='GRU')#.cuda()
+model_GRU_drop  =BasicRNNLM(vocabulary_size=vocabulary_size,with_drops=True,method='GRU')#.cuda()
 
 # Define loss function
 criterion=torch.nn.CrossEntropyLoss(size_average=False)
 
 # Define optimizer
-optimizer=torch.optim.SGD(model.parameters(),lr=learning_rate)
+optimizer=torch.optim.SGD(model_LSTM.parameters(),lr=learning_rate)
 
 
 
@@ -124,7 +137,7 @@ def train(data,model,criterion,optimizer):
     model.train()
     # Get initial hidden and memory states
     states=model.get_initial_states(data.size(0))
-
+    #train_loss = []
     # Loop sequence length (train)
     for i in tqdm(range(0,data.size(1)-1,bptt),desc='> Train',ncols=100,ascii=True):
 
@@ -139,14 +152,14 @@ def train(data,model,criterion,optimizer):
         # Forward pass
         logits,states=model.forward(x,states)
         loss=criterion(logits,y.reshape(-1))
-
+        #train_loss.append(np.exp(loss))
         # Backward pass
         optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm(model.parameters(),clip_norm)
         optimizer.step()
 
-    return model
+    return model #,train_loss
 
 
 def eval(data,model,criterion):
@@ -185,36 +198,46 @@ def eval(data,model,criterion):
 # Train/validation/test
 ########################################################################################################################
 
-print('Train...')
-num_epochs = 2
-anneal_factor = 2.0
-# Loop training epochs
-lr=learning_rate
-best_val_loss=np.inf
-for e in tqdm(range(num_epochs),desc='Epoch',ncols=100,ascii=True):
+def run_dataset_in_net(model_input,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+    print('Train...')
+    num_epochs = 1
+    anneal_factor = 2.0
+    # Loop training epochs
+    lr=learning_rate
+    best_val_loss=np.inf
+    perplexity_train = []
+    perplexity_val = []
+    perplexity_test = []
+    for e in tqdm(range(num_epochs),desc='Epoch',ncols=100,ascii=True):
 
-    # Train
-    model=train(data_train,model,criterion,optimizer)
+        # Train
+        model =train(data_train,model_input,criterion,optimizer)
+        train_loss = eval(data_train, model, criterion)
 
-    # Validation
-    val_loss=eval(data_valid,model,criterion)
+        # Validation
+        val_loss=eval(data_valid,model,criterion)
 
-    # Anneal learning rate
-    if val_loss<best_val_loss:
-        best_val_loss=val_loss
-    else:
-        lr/=anneal_factor
-        optimizer=torch.optim.SGD(model.parameters(),lr=lr)
+        # Anneal learning rate
+        if val_loss<best_val_loss:
+            best_val_loss=val_loss
+        else:
+            lr/=anneal_factor
+            optimizer=torch.optim.SGD(model.parameters(),lr=lr)
 
-    # Test
-    test_loss=eval(data_test,model,criterion)
+        # Test
+        test_loss=eval(data_test,model,criterion)
 
-    # Report
-    msg='Epoch %d: \tValid loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(e+1,val_loss,test_loss,np.exp(test_loss))
-    tqdm.write(msg)
+        # Report
+        msg='Epoch %d: \tValid loss=%.4f \tTest loss=%.4f \tTest perplexity=%.1f'%(e+1,val_loss,test_loss,np.exp(test_loss))
+        perplexity_train.append(np.exp(train_loss))
+        perplexity_val.append(np.exp(val_loss))
+        perplexity_test.append(np.exp(test_loss))
+        tqdm.write(msg)
+
+        return perplexity_train,perplexity_val, perplexity_test
 
 
-
+train, val, test = run_dataset_in_net(model_input = model_LSTM)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
 
 
 """
