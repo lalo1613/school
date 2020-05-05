@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
 import torch
-from DLcourse.ex2_training import Training_LSTM
-import matplotlib.pyplot as plt
+from DLcourse.RNN import NetLSTM
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
 from nltk.corpus import stopwords
@@ -13,8 +12,8 @@ from string import ascii_lowercase
 
 
 # setting directories now
-#dir_input = r"C:\Users\omri_\Downloads\PTB"+"\\"
-dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
+dir_input = r"C:\Users\omri_\Downloads\PTB"+"\\"
+# dir_input = r"C:\Users\Bengal\Downloads\PTB"+"\\"
 
 
 def preprocess_sentence(sentence : str):
@@ -119,28 +118,45 @@ test_input, test_output = preprocess_dataset(test)
 Vocabulary_Dict = create_vocabulary_dict()
 
 train_input_formatted, train_output_formatted, train_lengths = format_to_torch(train_input, train_output)
-valid_input_formatted, valid_output_formatted, valid_lengths = format_to_torch(valid_input, valid_output)
-test_input_formatted, test_output_formatted, test_lengths = format_to_torch(test_input, test_output)
 
-# temp
-lstm = torch.nn.LSTM(input_size=1, hidden_size=200, num_layers=2, batch_first=True)
-hidden = torch.randn(2,train_input_formatted.shape[0],200)
-
-word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=1)
-X = word_embedding(train_input_formatted)  # sloppy cause I'm lazy      # every sentence is embedded to 50 len vector (as it was before so why?)
-train_input_formatted.size() #[42069, 50]
-X.size()    #[42069, 50, 1]
-X = torch.nn.utils.rnn.pack_padded_sequence(X, train_lengths, batch_first=True)
-X, hidden = lstm(X)
-X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
+# train temp
+def argmax_word(log_probs):
+    argmax_vec = torch.Tensor()
+    for sentence in range(log_probs.size[0]):
+        for word in range(log_probs.size[1]):
+            argmax_vec[sentence,word] = log_probs[sentence,word].argmax()
 
 
-X.size()
-len(train_input_formatted)
-len(train_input.count())
-len(train_input)
+loss_function = torch.nn.NLLLoss()
+net = NetLSTM(vocabulary=Vocabulary_Dict, hidden_size=200, embd_dim=3)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
+batch_size = 100
+hidden = None
+
+for epoch in range(500):
+    optimizer.zero_grad()
+    log_probs, hidden = net(train_input_formatted[:10], train_lengths[:10], hidden)
+    log_probs.shape
+    loss_function(log_probs,train_output_formatted[:10])
 
 
-# temp
-net = Training_LSTM(dir_input = dir_input,train_input=train_input_formatted, train_output=train_output_formatted, test_input=valid_input_formatted,test_output=valid_output_formatted,dataset_lengths = train_lengths,vocabulary=Vocabulary_Dict,NetName=Net_LSTM)
 
+# net temp
+
+# context_size = 50; em_dim = 3
+#
+# hidden = None
+# lstm = torch.nn.LSTM(input_size=3, hidden_size=200, num_layers=2)
+# word_embedding = torch.nn.Embedding(num_embeddings=len(Vocabulary_Dict), embedding_dim=3)
+# lin = torch.nn.Linear(200, len(Vocabulary_Dict))
+# F = torch.nn.functional
+#
+# embedded_input = word_embedding(train_input_formatted[:10])
+# X = torch.nn.utils.rnn.pack_padded_sequence(embedded_input, train_lengths[:10], batch_first=True)
+# X, hidden = lstm(X, hidden)
+# X, _ = torch.nn.utils.rnn.pad_packed_sequence(X, batch_first=True)
+# X = lin(X)
+# log_probs = F.softmax(X, 1)
+#
+#
+# # temp
