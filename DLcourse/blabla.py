@@ -122,7 +122,7 @@ data_valid=torch.LongTensor(val.astype(np.int64))
 data_test=torch.LongTensor(test.astype(np.int64))
 
 # Make batches
-batch_size = 35
+batch_size = 20
 num_batches=data_train.size(0)//batch_size         # Get number of batches
 data_train=data_train[:num_batches*batch_size]     # Trim last elements
 data_train=data_train.view(batch_size,-1)          # Reshape
@@ -226,7 +226,7 @@ def eval(data,model,criterion):
 
 def run_dataset_in_net(model_input,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
     print('Train...')
-    num_epochs = 1
+    num_epochs = 5
     anneal_factor = 2.0
     # Loop training epochs
     lr=learning_rate
@@ -260,11 +260,13 @@ def run_dataset_in_net(model_input,learning_rate = learning_rate, data_train = d
         perplexity_test.append(np.exp(test_loss))
         tqdm.write(msg)
 
-        return perplexity_train,perplexity_val, perplexity_test
+    return perplexity_train,perplexity_val, perplexity_test
 
 
 train, val, test = run_dataset_in_net(model_input = model_LSTM)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
-
+train
+val
+test
 
 """
 ########################################################
