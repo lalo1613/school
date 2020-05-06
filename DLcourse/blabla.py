@@ -353,7 +353,6 @@ trains.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Train datase
 vals.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Validation dataset perplexity')
 tests.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Test dataset perplexity')
 
-# צריך להבין למה לוקח כל כך הרבה זמן לרוץ ואיך לשמור אוטומטית את השמות של הקבצים
 
 """
 ########################################################
