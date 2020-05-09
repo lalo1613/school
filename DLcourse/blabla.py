@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 ########################################################################################################################
-# Basic RNN language model
+# LSTM & GRU models
 ########################################################################################################################
 
 class GRU(torch.nn.Module):
@@ -68,7 +68,6 @@ class GRU(torch.nn.Module):
         # Detach returns a new variable, decoupled from the current computation graph
         h[0].detach() #,h[1].detach()
 
-
 class LSTM(torch.nn.Module):
 
     def __init__(self,vocabulary_size,with_drops):
@@ -128,50 +127,57 @@ class LSTM(torch.nn.Module):
         # Detach returns a new variable, decoupled from the current computation graph
         return h[0].detach(),h[1].detach()
 
-
-
 ###########################################################
 
+# Upload data
 dir_input = r"C:\\Users\\Bengal\Downloads\PTB"+"\\"
 train = open(dir_input+'ptb.train.txt').read().replace('\n','<eos>').split(' ')
 valid = open(dir_input+'ptb.valid.txt').read().replace('\n','<eos>').split(' ')
 test = open(dir_input+'ptb.test.txt').read().replace('\n','<eos>').split(' ')
 
+# Function: Create dictionary of sentence
 def Vocab(sentence, Vocabulary):
     for word in sentence:
         if word not in Vocabulary:
             Vocabulary[word] = len(Vocabulary)
     return Vocabulary
 
-ptb_dict = Vocab(train,{})
-ptb_dict = Vocab(valid,ptb_dict)
-ptb_dict = Vocab(test,ptb_dict)
+# Create dictionary from our datasets
+ptb_dict = Vocab(train,{})      # first dictionary is empty
+ptb_dict = Vocab(valid,ptb_dict)    # update dictionary with validation set
+ptb_dict = Vocab(test,ptb_dict)     # update dictionary with test set
 
-def replace_words_nums(sentence):
+# Replace the words in a list to their numeric value by dictionary
+def replace_words_nums(sentence, dictionary = ptb_dict):
     sentence_tmp = []
     for word in sentence:
-        sentence_tmp.append(ptb_dict[word])
+        sentence_tmp.append(dictionary[word])
     return sentence_tmp
 
+# Replace the words in our datasets to their numeric value by our prepared ptb_dictionary
 train = np.array(replace_words_nums(train))
 val = np.array(replace_words_nums(valid))
 test = np.array(replace_words_nums(test))
 
+
 vocabulary_size =len(ptb_dict)
 
-# Make it pytorch
+# convert the datasets to torches
 data_train=torch.LongTensor(train.astype(np.int64))
 data_valid=torch.LongTensor(val.astype(np.int64))
 data_test=torch.LongTensor(test.astype(np.int64))
 
 # Make batches
 batch_size = 20
+# Train
 num_batches=data_train.size(0)//batch_size         # Get number of batches
 data_train=data_train[:num_batches*batch_size]     # Trim last elements
 data_train=data_train.view(batch_size,-1)          # Reshape
+# Validation
 num_batches=data_valid.size(0)//batch_size
 data_valid=data_valid[:num_batches*batch_size]
 data_valid=data_valid.view(batch_size,-1)
+# Test
 num_batches=data_test.size(0)//batch_size
 data_test=data_test[:num_batches*batch_size]
 data_test=data_test.view(batch_size,-1)
@@ -180,31 +186,21 @@ data_test=data_test.view(batch_size,-1)
 # Inits
 ########################################################################################################################
 
-print ('Init...')
-learning_rate = 1
 
-# Instantiate and init the model, and move it to the GPU
-model_LSTM  =LSTM(vocabulary_size=vocabulary_size,with_drops=False)#.cuda()
-model_LSTM_drop  =LSTM(vocabulary_size=vocabulary_size,with_drops=True)#.cuda()
+# Instantiate and init the models
+# LSTM models
+model_LSTM  =LSTM(vocabulary_size=vocabulary_size,with_drops=False)
+model_LSTM_drop  =LSTM(vocabulary_size=vocabulary_size,with_drops=True)
 
-model_GRU  =GRU(vocabulary_size=vocabulary_size,with_drops=False)#.cuda()
-model_GRU_drop =GRU(vocabulary_size=vocabulary_size,with_drops=True)#.cuda()
-
-
-# Define loss function
-criterion=torch.nn.CrossEntropyLoss(size_average=False)
-
-# Define optimizer
-optimizer=torch.optim.SGD(model_LSTM.parameters(),lr=learning_rate)
-
-
+# GRU models
+model_GRU  =GRU(vocabulary_size=vocabulary_size,with_drops=False)
+model_GRU_drop =GRU(vocabulary_size=vocabulary_size,with_drops=True)
 
 ########################################################################################################################
 # Train/test routines
 ########################################################################################################################
-bptt = 35
-def train(data,model,criterion,optimizer):
-    clip_norm = 0.25
+def train(data,model,criterion,optimizer,bptt = 35):
+    clip_norm = 5.0
     # Set model to training mode (we're using dropout)
     model.train()
     # Get initial hidden and memory states
@@ -233,8 +229,7 @@ def train(data,model,criterion,optimizer):
 
     return model #,train_loss
 
-
-def eval(data,model,criterion):
+def eval(data,model,criterion,bptt = 35):
 
     # Set model to evaluation mode (we're using dropout)
     model.eval()
@@ -246,7 +241,7 @@ def eval(data,model,criterion):
     num_loss=0
     for i in tqdm(range(0,data.size(1)-1,bptt),desc='> Eval',ncols=100,ascii=True):
 
-        # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
+        # Get the chunk and wrap the variables into the gradient propagation chain
         seqlen=int(np.min([bptt,data.size(1)-1-i]))
         x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True)#.cuda()
         y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True)#.cuda()
@@ -268,8 +263,14 @@ def eval(data,model,criterion):
 # Train/validation/test
 ########################################################################################################################
 
-def run_dataset_in_net(model_input,file_name,num_epochs,anneal_factor = 2,dir_input =dir_input, learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+def run_dataset_in_net(model_input,file_name,num_epochs,anneal_factor = 2,dir_input =dir_input, learning_rate = 1, data_train = data_train, data_valid = data_valid, data_test = data_test):
     print('Train...')
+    # Define optimizer
+    optimizer = torch.optim.SGD(model_LSTM.parameters(), lr=1)
+
+    # Define loss function
+    criterion = torch.nn.CrossEntropyLoss(size_average=False)
+
     num_epochs = num_epochs
     #anneal_factor = 1.2
     # Loop training epochs
@@ -319,7 +320,7 @@ GRU = run_dataset_in_net(model_input = model_GRU,file_name = 'model_GRU', num_ep
 GRU_drop = run_dataset_in_net(model_input = model_GRU_drop,file_name = 'model_GRU_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
 
 
-#   Upload results without running the models
+#   Upload loss results without running the models
 #####################################################
 LSTM = pd.read_csv(dir_input+ "outputs/" + "model_LSTM" + ".csv")[['Train','Validation','Test']]
 LSTM_drop = pd.read_csv(dir_input+ "outputs/" + "model_LSTM_drop" + ".csv")[['Train','Validation','Test']]
@@ -342,19 +343,27 @@ vals.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Validation dat
 tests.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Test dataset perplexity')
 
 
-# need to work on it
-def TestingNet(test_set, NetName,vocabulary_size,with_drops):
-
-    net = NetName()
+# evaluate a test sentence with the prepared weights:
+def TestingNet(test_set, NetName,vocabulary_size,with_drops = False):
+    batch_size = 20
+    net = NetName(vocabulary_size = vocabulary_size,with_drops = with_drops)
     if with_drops == True: drop = '_drop'
     else: drop = ''
-    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+NetName().__class__.__name__+drop+".pth"))
+    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+net.__class__.__name__+drop+".pth"))
+    #net.eval()
     test_set = test_set.replace('\n','<eos>').split(' ')
-    outputs = net(test_set)
-    values, indices = torch.max(outputs, 1)
-    preds = np.array(indices)
-    return preds
+    test_set = np.array(replace_words_nums(test_set))
+    test_set = torch.LongTensor(test_set.astype(np.int64))
+    num_batches = test_set.size(0) // batch_size
+    test_set = test_set[:num_batches * batch_size]
+    test_set = test_set.view(batch_size, -1)
+    criterion = torch.nn.CrossEntropyLoss(size_average=False)
+    loss = eval(test_set, net, criterion)
 
+    return print("Perplexity Loss: ", np.exp(loss))
+
+test_sentence = open(dir_input+'ptb.test.txt').read()
+TestingNet(test_set= test_sentence,NetName= LSTM,vocabulary_size= len(ptb_dict))
 
 """
 ########################################################
