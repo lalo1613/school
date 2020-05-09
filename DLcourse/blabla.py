@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 ########################################################################################################################
-# Basic RNN language model
+# LSTM & GRU models
 ########################################################################################################################
 
 class GRU(torch.nn.Module):
@@ -68,7 +68,6 @@ class GRU(torch.nn.Module):
         # Detach returns a new variable, decoupled from the current computation graph
         h[0].detach() #,h[1].detach()
 
-
 class LSTM(torch.nn.Module):
 
     def __init__(self,vocabulary_size,with_drops):
@@ -128,50 +127,57 @@ class LSTM(torch.nn.Module):
         # Detach returns a new variable, decoupled from the current computation graph
         return h[0].detach(),h[1].detach()
 
-
-
 ###########################################################
 
+# Upload data
 dir_input = r"C:\\Users\\Bengal\Downloads\PTB"+"\\"
 train = open(dir_input+'ptb.train.txt').read().replace('\n','<eos>').split(' ')
 valid = open(dir_input+'ptb.valid.txt').read().replace('\n','<eos>').split(' ')
 test = open(dir_input+'ptb.test.txt').read().replace('\n','<eos>').split(' ')
 
+# Function: Create dictionary of sentence
 def Vocab(sentence, Vocabulary):
     for word in sentence:
         if word not in Vocabulary:
             Vocabulary[word] = len(Vocabulary)
     return Vocabulary
 
-ptb_dict = Vocab(train,{})
-ptb_dict = Vocab(valid,ptb_dict)
-ptb_dict = Vocab(test,ptb_dict)
+# Create dictionary from our datasets
+ptb_dict = Vocab(train,{})      # first dictionary is empty
+ptb_dict = Vocab(valid,ptb_dict)    # update dictionary with validation set
+ptb_dict = Vocab(test,ptb_dict)     # update dictionary with test set
 
-def replace_words_nums(sentence):
+# Replace the words in a list to their numeric value by dictionary
+def replace_words_nums(sentence, dictionary = ptb_dict):
     sentence_tmp = []
     for word in sentence:
-        sentence_tmp.append(ptb_dict[word])
+        sentence_tmp.append(dictionary[word])
     return sentence_tmp
 
+# Replace the words in our datasets to their numeric value by our prepared ptb_dictionary
 train = np.array(replace_words_nums(train))
 val = np.array(replace_words_nums(valid))
 test = np.array(replace_words_nums(test))
 
+
 vocabulary_size =len(ptb_dict)
 
-# Make it pytorch
+# convert the datasets to torches
 data_train=torch.LongTensor(train.astype(np.int64))
 data_valid=torch.LongTensor(val.astype(np.int64))
 data_test=torch.LongTensor(test.astype(np.int64))
 
 # Make batches
 batch_size = 20
+# Train
 num_batches=data_train.size(0)//batch_size         # Get number of batches
 data_train=data_train[:num_batches*batch_size]     # Trim last elements
 data_train=data_train.view(batch_size,-1)          # Reshape
+# Validation
 num_batches=data_valid.size(0)//batch_size
 data_valid=data_valid[:num_batches*batch_size]
 data_valid=data_valid.view(batch_size,-1)
+# Test
 num_batches=data_test.size(0)//batch_size
 data_test=data_test[:num_batches*batch_size]
 data_test=data_test.view(batch_size,-1)
@@ -180,24 +186,15 @@ data_test=data_test.view(batch_size,-1)
 # Inits
 ########################################################################################################################
 
-print ('Init...')
-learning_rate = 1
 
-# Instantiate and init the model, and move it to the GPU
-model_LSTM  =LSTM(vocabulary_size=vocabulary_size,with_drops=False)#.cuda()
-model_LSTM_drop  =LSTM(vocabulary_size=vocabulary_size,with_drops=True)#.cuda()
+# Instantiate and init the models
+# LSTM models
+model_LSTM  =LSTM(vocabulary_size=vocabulary_size,with_drops=False)
+model_LSTM_drop  =LSTM(vocabulary_size=vocabulary_size,with_drops=True)
 
-model_GRU  =GRU(vocabulary_size=vocabulary_size,with_drops=False)#.cuda()
-model_GRU_drop =GRU(vocabulary_size=vocabulary_size,with_drops=True)#.cuda()
-
-
-# Define loss function
-criterion=torch.nn.CrossEntropyLoss(size_average=False)
-
-# Define optimizer
-optimizer=torch.optim.SGD(model_LSTM.parameters(),lr=learning_rate)
-
-
+# GRU models
+model_GRU  =GRU(vocabulary_size=vocabulary_size,with_drops=False)
+model_GRU_drop =GRU(vocabulary_size=vocabulary_size,with_drops=True)
 
 ########################################################################################################################
 # Train/test routines
@@ -231,7 +228,6 @@ def train(data,model,criterion,optimizer,bptt = 35):
         optimizer.step()
 
     return model #,train_loss
-
 
 def eval(data,model,criterion,bptt = 35):
 
@@ -267,8 +263,14 @@ def eval(data,model,criterion,bptt = 35):
 # Train/validation/test
 ########################################################################################################################
 
-def run_dataset_in_net(model_input,file_name,num_epochs,anneal_factor = 2,dir_input =dir_input, learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+def run_dataset_in_net(model_input,file_name,num_epochs,anneal_factor = 2,dir_input =dir_input, learning_rate = 1, data_train = data_train, data_valid = data_valid, data_test = data_test):
     print('Train...')
+    # Define optimizer
+    optimizer = torch.optim.SGD(model_LSTM.parameters(), lr=1)
+
+    # Define loss function
+    criterion = torch.nn.CrossEntropyLoss(size_average=False)
+
     num_epochs = num_epochs
     #anneal_factor = 1.2
     # Loop training epochs
