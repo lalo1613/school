@@ -369,7 +369,7 @@ def TestingNet(test_set, NetName,dictionary = ptb_dict,with_drops = False):
     return print("Perplexity Loss: ", np.exp(loss))
 
 test_sentence = open(dir_input+'ptb.test.txt').read()
-TestingNet(test_set= test_sentence,NetName= LSTM,vocabulary_size= len(ptb_dict))
+TestingNet(test_set= test_sentence,NetName= LSTM, with_drops = False)
 
 """
 ########################################################
