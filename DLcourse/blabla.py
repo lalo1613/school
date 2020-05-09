@@ -343,18 +343,21 @@ tests.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Test dataset 
 
 
 # need to work on it
-def TestingNet(test_set, NetName,vocabulary_size,with_drops):
+def TestingNet(test_set, NetName,vocabulary_size,with_drops = False):
 
-    net = NetName()
+    net = NetName(vocabulary_size = vocabulary_size,with_drops = with_drops)
     if with_drops == True: drop = '_drop'
     else: drop = ''
-    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+NetName().__class__.__name__+drop+".pth"))
+    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+net().__class__.__name__+drop+".pth"))
     test_set = test_set.replace('\n','<eos>').split(' ')
+    test_set = replace_words_nums(test_set)
+    test_set = torch.LongTensor(test_set.astype(np.int64))
     outputs = net(test_set)
     values, indices = torch.max(outputs, 1)
     preds = np.array(indices)
     return preds
 
+x= TestingNet(test_set= test,NetName= LSTM,vocabulary_size= len(ptb_dict))
 
 """
 ########################################################
