@@ -202,9 +202,8 @@ optimizer=torch.optim.SGD(model_LSTM.parameters(),lr=learning_rate)
 ########################################################################################################################
 # Train/test routines
 ########################################################################################################################
-bptt = 35
-def train(data,model,criterion,optimizer):
-    clip_norm = 0.25
+def train(data,model,criterion,optimizer,bptt = 35):
+    clip_norm = 5.0
     # Set model to training mode (we're using dropout)
     model.train()
     # Get initial hidden and memory states
@@ -234,7 +233,7 @@ def train(data,model,criterion,optimizer):
     return model #,train_loss
 
 
-def eval(data,model,criterion):
+def eval(data,model,criterion,bptt = 35):
 
     # Set model to evaluation mode (we're using dropout)
     model.eval()
@@ -246,7 +245,7 @@ def eval(data,model,criterion):
     num_loss=0
     for i in tqdm(range(0,data.size(1)-1,bptt),desc='> Eval',ncols=100,ascii=True):
 
-        # Get the chunk and wrap the variables into the gradient propagation chain + move them to the GPU
+        # Get the chunk and wrap the variables into the gradient propagation chain
         seqlen=int(np.min([bptt,data.size(1)-1-i]))
         x=torch.autograd.Variable(data[:,i:i+seqlen],volatile=True)#.cuda()
         y=torch.autograd.Variable(data[:,i+1:i+seqlen+1],volatile=True)#.cuda()
@@ -319,7 +318,7 @@ GRU = run_dataset_in_net(model_input = model_GRU,file_name = 'model_GRU', num_ep
 GRU_drop = run_dataset_in_net(model_input = model_GRU_drop,file_name = 'model_GRU_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
 
 
-#   Upload results without running the models
+#   Upload loss results without running the models
 #####################################################
 LSTM = pd.read_csv(dir_input+ "outputs/" + "model_LSTM" + ".csv")[['Train','Validation','Test']]
 LSTM_drop = pd.read_csv(dir_input+ "outputs/" + "model_LSTM_drop" + ".csv")[['Train','Validation','Test']]
@@ -342,22 +341,27 @@ vals.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Validation dat
 tests.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Test dataset perplexity')
 
 
-# need to work on it
+# evaluate a test sentence with the prepared weights:
 def TestingNet(test_set, NetName,vocabulary_size,with_drops = False):
-
+    batch_size = 20
     net = NetName(vocabulary_size = vocabulary_size,with_drops = with_drops)
     if with_drops == True: drop = '_drop'
     else: drop = ''
-    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+net().__class__.__name__+drop+".pth"))
+    net.load_state_dict(torch.load(dir_input+"outputs\\"+"model_"+net.__class__.__name__+drop+".pth"))
+    #net.eval()
     test_set = test_set.replace('\n','<eos>').split(' ')
-    test_set = replace_words_nums(test_set)
+    test_set = np.array(replace_words_nums(test_set))
     test_set = torch.LongTensor(test_set.astype(np.int64))
-    outputs = net(test_set)
-    values, indices = torch.max(outputs, 1)
-    preds = np.array(indices)
-    return preds
+    num_batches = test_set.size(0) // batch_size
+    test_set = test_set[:num_batches * batch_size]
+    test_set = test_set.view(batch_size, -1)
+    criterion = torch.nn.CrossEntropyLoss(size_average=False)
+    loss = eval(test_set, net, criterion)
 
-x= TestingNet(test_set= test,NetName= LSTM,vocabulary_size= len(ptb_dict))
+    return print("Perplexity Loss: ", np.exp(loss))
+
+test_sentence = open(dir_input+'ptb.test.txt').read()
+TestingNet(test_set= test_sentence,NetName= LSTM,vocabulary_size= len(ptb_dict))
 
 """
 ########################################################
