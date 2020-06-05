@@ -313,33 +313,33 @@ def run_dataset_in_net(model_input,file_name,num_epochs,anneal_factor = 2,dir_in
 # RUN THE MODELS (run it only if you want to *retrain* the models)
 ########################################################################################################################
 #CHEN RUN
-LSTM = run_dataset_in_net(model_input = model_LSTM,file_name = 'model_LSTM', num_epochs = 13, anneal_factor = 2.0)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
-LSTM_drop = run_dataset_in_net(model_input = model_LSTM_drop,file_name = 'model_LSTM_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
-#OMRI RUN
-GRU = run_dataset_in_net(model_input = model_GRU,file_name = 'model_GRU', num_epochs = 13, anneal_factor = 2.0)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
-GRU_drop = run_dataset_in_net(model_input = model_GRU_drop,file_name = 'model_GRU_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+# LSTM = run_dataset_in_net(model_input = model_LSTM,file_name = 'model_LSTM', num_epochs = 13, anneal_factor = 2.0)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+# LSTM_drop = run_dataset_in_net(model_input = model_LSTM_drop,file_name = 'model_LSTM_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+# #OMRI RUN
+# GRU = run_dataset_in_net(model_input = model_GRU,file_name = 'model_GRU', num_epochs = 13, anneal_factor = 2.0)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
+# GRU_drop = run_dataset_in_net(model_input = model_GRU_drop,file_name = 'model_GRU_drop', num_epochs = 17,anneal_factor = 1.2)#,learning_rate = learning_rate, data_train = data_train, data_valid = data_valid, data_test = data_test, optimizer = optimizer):
 
 ########################################################################################################################
 #   Upload loss results without running the models
 ########################################################################################################################
-LSTM = pd.read_csv(dir_input+ "outputs/" + "model_LSTM" + ".csv")[['Train','Validation','Test']]
-LSTM_drop = pd.read_csv(dir_input+ "outputs/" + "model_LSTM_drop" + ".csv")[['Train','Validation','Test']]
-GRU = pd.read_csv(dir_input+ "outputs/" + "model_GRU" + ".csv")[['Train','Validation','Test']]
-GRU_drop = pd.read_csv(dir_input+ "outputs/" + "model_GRU_drop" + ".csv")[['Train','Validation','Test']]
+LSTM_DF = pd.read_csv(dir_input+ "outputs/" + "model_LSTM" + ".csv")[['Train','Validation','Test']]
+LSTM_drop_DF = pd.read_csv(dir_input+ "outputs/" + "model_LSTM_drop" + ".csv")[['Train','Validation','Test']]
+GRU_DF = pd.read_csv(dir_input+ "outputs/" + "model_GRU" + ".csv")[['Train','Validation','Test']]
+GRU_drop_DF = pd.read_csv(dir_input+ "outputs/" + "model_GRU_drop" + ".csv")[['Train','Validation','Test']]
 
 # Prepare dataframes of train validation and test performance
-trains = pd.DataFrame({'LSTM':LSTM['Train'],'LSTM_Dropout':LSTM_drop['Train'],'GRU':GRU['Train'],'GRU_Dropout':GRU_drop['Train']})
-vals = pd.DataFrame({'LSTM':LSTM['Validation'],'LSTM_Dropout':LSTM_drop['Validation'],'GRU':GRU['Validation'],'GRU_Dropout':GRU_drop['Validation']})
-tests = pd.DataFrame({'LSTM':LSTM['Test'],'LSTM_Dropout':LSTM_drop['Test'],'GRU':GRU['Test'],'GRU_Dropout':GRU_drop['Test']})
+trains = pd.DataFrame({'LSTM':LSTM_DF['Train'],'LSTM_Dropout':LSTM_drop_DF['Train'],'GRU':GRU_DF['Train'],'GRU_Dropout':GRU_drop_DF['Train']})
+vals = pd.DataFrame({'LSTM':LSTM_DF['Validation'],'LSTM_Dropout':LSTM_drop_DF['Validation'],'GRU':GRU_DF['Validation'],'GRU_Dropout':GRU_drop_DF['Validation']})
+tests = pd.DataFrame({'LSTM':LSTM_DF['Test'],'LSTM_Dropout':LSTM_drop_DF['Test'],'GRU':GRU_DF['Test'],'GRU_Dropout':GRU_drop_DF['Test']})
 
 ########################################################################################################################
 #   Plots
 ########################################################################################################################
 # By model
-LSTM.plot(lw=2, colormap='jet', marker='.', markersize=10, title='LSTM perplexity')
-LSTM_drop.plot(lw=2, colormap='jet', marker='.', markersize=10, title='LSTM with Dropouts perplexity')
-GRU.plot(lw=2, colormap='jet', marker='.', markersize=10, title='GRU perplexity')
-GRU_drop.plot(lw=2, colormap='jet', marker='.', markersize=10, title='GRU with Dropouts perplexity')
+LSTM_DF.plot(lw=2, colormap='jet', marker='.', markersize=10, title='LSTM perplexity')
+LSTM_drop_DF.plot(lw=2, colormap='jet', marker='.', markersize=10, title='LSTM with Dropouts perplexity')
+GRU_DF.plot(lw=2, colormap='jet', marker='.', markersize=10, title='GRU perplexity')
+GRU_drop_DF.plot(lw=2, colormap='jet', marker='.', markersize=10, title='GRU with Dropouts perplexity')
 
 # By dataset
 trains.plot(lw=2, colormap='jet', marker='.', markersize=10, title='Train dataset perplexity')
