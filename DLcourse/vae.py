@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 
 
+
 class Encoder(torch.nn.Module):
     def __init__(self, D_in, H, D_out, keep_prob=0):
         super(Encoder, self).__init__()
@@ -512,13 +513,15 @@ def main(args):
     PMLR_n_samples = args.PMLR_n_samples  # number of labeled samples to plot a map from input data space to the latent space
 
     """ prepare MNIST data """
-    train_total_data, train_size, _, _, test_data, test_labels = mnist_data.prepare_MNIST_data()
+    #train_total_data, train_size, _, _, test_data, test_labels = mnist_data.prepare_MNIST_data()
+
+    train_size = len(train_labels)
     n_samples = train_size
 
     """ create network """
     keep_prob = 0.99
-    encoder = vae.Encoder(dim_img, n_hidden, dim_z, keep_prob).to(device)
-    decoder = vae.Decoder(dim_z, n_hidden, dim_img, keep_prob).to(device)
+    encoder = Encoder(dim_img, n_hidden, dim_z, keep_prob).to(device)
+    decoder = Decoder(dim_z, n_hidden, dim_img, keep_prob).to(device)
     # + operator will return but .extend is inplace no return.
     optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=learn_rate)
     # vae.init_weights(encoder, decoder)
@@ -529,7 +532,7 @@ def main(args):
         PRR = plot_utils.Plot_Reproduce_Performance(RESULTS_DIR, PRR_n_img_x, PRR_n_img_y, IMAGE_SIZE_MNIST,
                                                     IMAGE_SIZE_MNIST, PRR_resize_factor)
 
-        x_PRR = test_data[0:PRR.n_tot_imgs, :]
+        x_PRR = test_images[0:PRR.n_tot_imgs, :]
 
         x_PRR_img = x_PRR.reshape(PRR.n_tot_imgs, IMAGE_SIZE_MNIST, IMAGE_SIZE_MNIST)
         PRR.save_images(x_PRR_img, name='input.jpg')
@@ -551,7 +554,7 @@ def main(args):
         PMLR = plot_utils.Plot_Manifold_Learning_Result(RESULTS_DIR, PMLR_n_img_x, PMLR_n_img_y, IMAGE_SIZE_MNIST,
                                                         IMAGE_SIZE_MNIST, PMLR_resize_factor, PMLR_z_range)
 
-        x_PMLR = test_data[0:PMLR_n_samples, :]
+        x_PMLR = test_images[0:PMLR_n_samples, :]
         id_PMLR = test_labels[0:PMLR_n_samples, :]
 
         if ADD_NOISE:
@@ -569,6 +572,7 @@ def main(args):
     for epoch in range(n_epochs):
 
         # Random shuffling
+        train_total_data = np.concatenate((train_images, train_labels), axis=1)
         np.random.shuffle(train_total_data)
         train_data_ = train_total_data[:, :-mnist_data.NUM_LABELS]
 
@@ -594,7 +598,7 @@ def main(args):
             assert not torch.isnan(batch_xs_target).any()
 
             y, z, tot_loss, loss_likelihood, loss_divergence = \
-                                        vae.get_loss(encoder, decoder, batch_xs_input, batch_xs_target)
+                                        get_loss(encoder, decoder, batch_xs_input, batch_xs_target)
 
             optimizer.zero_grad()
             tot_loss.backward()
@@ -617,7 +621,7 @@ def main(args):
 
             # Plot for reproduce performance
             if PRR:
-                y_PRR = vae.get_ae(encoder, decoder, x_PRR)
+                y_PRR = get_ae(encoder, decoder, x_PRR)
 
                 y_PRR_img = y_PRR.reshape(PRR.n_tot_imgs, IMAGE_SIZE_MNIST, IMAGE_SIZE_MNIST)
                 PRR.save_images(y_PRR_img.detach().cpu().numpy(), name="/PRR_epoch_%02d" % (epoch) + ".jpg")
@@ -632,7 +636,7 @@ def main(args):
                 print('saved:', "/PMLR_epoch_%02d" % (epoch) + ".jpg")
 
                 # plot distribution of labeled images
-                z_PMLR = vae.get_z(encoder, x_PMLR)
+                z_PMLR = get_z(encoder, x_PMLR)
                 PMLR.save_scattered_image(z_PMLR.detach().cpu().numpy(), id_PMLR,
                                           name="/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
                 print('saved:', "/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
