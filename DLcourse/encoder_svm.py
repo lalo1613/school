@@ -211,7 +211,9 @@ train_size, _, _, test_data, test_labels, train_data, train_labels = prepare_F_M
 #X = torch.from_numpy(train_total_data[:100, :-NUM_LABELS]).float()
 X = train_data
 y = train_labels
-#try to concatinate X and y for shuffling
+#try to concatinate X and y for shuffling - dont succeed!!
+X = list(X)
+y = list(y)
 np.concatenate((train_data, train_labels), axis=1)
 #y = torch.from_numpy(train_total_data[:100, -NUM_LABELS:]).float()
 clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
