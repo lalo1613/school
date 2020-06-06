@@ -1,3 +1,5 @@
+# Some code was borrowed from https://github.com/petewarden/tensorflow_makefile/blob/master/tensorflow/models/image/mnist/convolutional.py
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -12,11 +14,8 @@ from six.moves import urllib
 
 import tensorflow as tf
 
-dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST"+"\\"
-dir_uncompressed = r"C:\Users\Bengal\Downloads\FashionMNIST\uncompressed"+"\\"
 SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
-DATA_DIRECTORY = dir_uncompressed
-
+#DATA_DIRECTORY = "data"
 
 # Params for MNIST
 IMAGE_SIZE = 28
@@ -25,19 +24,25 @@ PIXEL_DEPTH = 255
 NUM_LABELS = 10
 VALIDATION_SIZE = 5000  # Size of the validation set.
 
+dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST" +"\\"
+dir_uncompressed = r"C:\Users\Bengal\Downloads\FashionMNIST\uncompressed" #+"\\"
+#DATA_DIRECTORY = dir_uncompressed
+DATA_DIRECTORY = r"C:\Users\Bengal\Downloads\FashionMNIST"
+# tf.io.gfile.exists(DATA_DIRECTORY)
+# tf.io.gfile.exists(os.path.join(DATA_DIRECTORY, 'train-images-idx3-ubyte'))
 
 # Download MNIST data
-def maybe_download(filename):
-    """Download the data from Yann's website, unless it's already here."""
-    if not tf.io.gfile.exists(DATA_DIRECTORY):
-        tf.io.gfile.MakeDirs(DATA_DIRECTORY)
-    filepath = os.path.join(DATA_DIRECTORY, filename)
-    if not tf.io.gfile.exists(filepath):
-        filepath, _ = urllib.request.urlretrieve(SOURCE_URL + filename, filepath)
-        with tf.io.gfile.GFile(filepath) as f:
-            size = f.size()
-        print('Successfully downloaded', filename, size, 'bytes.')
-    return filepath
+# def maybe_download(filename):
+#     """Download the data from Yann's website, unless it's already here."""
+#     #if not tf.io.gfile.exists(DATA_DIRECTORY):
+#     #    tf.io.gfile.MakeDirs(DATA_DIRECTORY)
+#     filepath = os.path.join(DATA_DIRECTORY, filename)
+#     if not tf.io.gfile.exists(filepath):
+#         filepath, _ = urllib.request.urlretrieve(SOURCE_URL + filename, filepath)
+#         with tf.io.gfile.GFile(filepath) as f:
+#             size = f.size()
+#         print('Successfully downloaded', filename, size, 'bytes.')
+#     return filepath
 
 
 # Extract the images
@@ -118,10 +123,13 @@ def expend_training_data(images, labels):
 # Prepare MNISt data
 def prepare_MNIST_data(use_norm_shift=False, use_norm_scale=True, use_data_augmentation=False):
     # Get the data.
-    train_data_filename = maybe_download('train-images-idx3-ubyte.gz')
-    train_labels_filename = maybe_download('train-labels-idx1-ubyte.gz')
-    test_data_filename = maybe_download('t10k-images-idx3-ubyte.gz')
-    test_labels_filename = maybe_download('t10k-labels-idx1-ubyte.gz')
+    train_data_filename = os.path.join(DATA_DIRECTORY, 'train-images-idx3-ubyte.gz')
+    train_labels_filename = os.path.join(DATA_DIRECTORY,'train-labels-idx1-ubyte.gz')
+    test_data_filename = os.path.join(DATA_DIRECTORY,'t10k-images-idx3-ubyte.gz')
+    test_labels_filename = os.path.join(DATA_DIRECTORY,'t10k-labels-idx1-ubyte.gz')
+    # train_labels_filename = maybe_download('train-labels-idx1-ubyte.gz')
+    # test_data_filename = maybe_download('t10k-images-idx3-ubyte.gz')
+    # test_labels_filename = maybe_download('t10k-labels-idx1-ubyte.gz')
 
     # Extract it into numpy arrays.
     train_data = extract_data(train_data_filename, 60000, use_norm_shift, use_norm_scale)
@@ -146,23 +154,11 @@ def prepare_MNIST_data(use_norm_shift=False, use_norm_scale=True, use_data_augme
     return train_total_data, train_size, validation_data, validation_labels, test_data, test_labels
 
 
+################ VAE
+
 import  torch
-from torch import nn
-from torch.nn import functional as F
-import gzip
-import os
-import re
-import shutil
-import pandas as pd
-from mnist import MNIST
-import numpy as np
-import torch
-from DLcourse.lenet5 import Net_BatchNorm, Net_Dropout, Net_Dropout_BatchNorm, Net_None
-from DLcourse.testing import TestingNet
-import matplotlib.pyplot as plt
-
-
-
+from    torch import nn
+from    torch.nn import functional as F
 
 
 class Encoder(torch.nn.Module):
@@ -184,8 +180,6 @@ class Encoder(torch.nn.Module):
         return self._enc_mu(x), self._enc_log_sigma(x)
 
 
-
-
 class Decoder(torch.nn.Module):
     def __init__(self, D_in, H, D_out, keep_prob=0):
         super(Decoder, self).__init__()
@@ -195,7 +189,6 @@ class Decoder(torch.nn.Module):
     def forward(self, x):
         x = F.relu(self.linear1(x))
         return F.relu(self.linear2(x))
-
 
 def get_ae(encoder, decoder, x):
     # encoding
@@ -210,8 +203,6 @@ def get_ae(encoder, decoder, x):
 
     return y
 
-
-
 def get_z(encoder, x):
 
     # encoding
@@ -223,19 +214,7 @@ def get_z(encoder, x):
     return z
 
 
-
 def get_loss(encoder, decoder, x, x_target):
-    """
-    :param encoder:
-    :param decoder:
-    :param x: input
-    :param x_hat: target
-    :param dim_img:
-    :param dim_z:
-    :param n_hidden:
-    :param keep_prob:
-    :return:
-    """
     batchsz = x.size(0)
     # encoding
     mu, log_sigma = encoder(x)
@@ -266,56 +245,13 @@ def get_loss(encoder, decoder, x, x_target):
 
     return y, z, loss, marginal_likelihood, KL_divergence
 
+#### PLOT
 
-
-
-###############################################################################
-from mnist import MNIST
-
-import torch
-import numpy as np
-#import mnist_data
-import os
-#import plot_utils
-import glob
-
-import argparse
-
-#
-# setting directories now
-dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST"+"\\"
-dir_uncompressed = r"C:\Users\Bengal\Downloads\FashionMNIST\uncompressed"+"\\"
-#
-# # uncompressing image files and moving them to separate directory (run once only!)
-# # file_list = os.listdir(dir_input)
-# # for f in file_list:
-# #     with gzip.open(dir_input+f) as gz:
-# #         with open(dir_uncompressed+re.sub('.gz','',f),'wb') as to_save:
-# #             shutil.copyfileobj(gz,to_save)
-#
-# # loading train and test data
-# mndata = MNIST(dir_uncompressed)
-# train_images, train_labels = mndata.load_training()
-# test_images, test_labels = mndata.load_testing()
-#
-# # reshaping images into 2d arrays
-# train_images = np.array(train_images).reshape((60000,28,28))
-# test_images = np.array(test_images).reshape((10000,28,28))
-#
-# # saving train and test data as torch tensors
-# train_images = torch.tensor(train_images).float()
-# train_labels = torch.tensor(train_labels)
-# test_images = torch.tensor(test_images).float()
-# test_labels = torch.tensor(test_labels)
-#
-#
-
-##############
-#plot_utils
 import numpy as np
 import matplotlib.pyplot as plt
+#from scipy.misc import imsave
 from imageio import imwrite     # instead of imsave
-#from Pillow import imresize     # need to use resize instead
+#from scipy.misc import imresize
 
 
 class Plot_Reproduce_Performance():
@@ -338,7 +274,10 @@ class Plot_Reproduce_Performance():
         self.resize_factor = resize_factor
 
     def save_images(self, images, name='result.jpg'):
+        # plt.imshow(images[3])
         images = images.reshape(self.n_img_x * self.n_img_y, self.img_h, self.img_w)
+        #imsave(self.DIR + "/" + name, self._merge(images, [self.n_img_y, self.n_img_x]))
+        #plt.imshow(images)
         imwrite(self.DIR + "/" + name, self._merge(images, [self.n_img_y, self.n_img_x]))
 
     def _merge(self, images, size):
@@ -352,13 +291,16 @@ class Plot_Reproduce_Performance():
         for idx, image in enumerate(images):
             i = int(idx % size[1])
             j = int(idx / size[1])
+            #image_ = image.resize(w_, h_)
+            #print(images.shape[1], images.shape[2])
+            #image_ = image.resize(images.shape[1], images.shape[2])
 
-            image_ = np.array(image.resize(w_,h_))
-#            image_ = np.array(image.fromarray(w_,h_).resize())
+            image_ = image
+            #image_ = np.array(image.resize(w_, h_))
             #image_ = imresize(image, size=(w_, h_), interp='bicubic')
 
             img[j * h_:j * h_ + h_, i * w_:i * w_ + w_] = image_
-
+            #plt.imshow(img)
         return img
 
 
@@ -407,6 +349,7 @@ class Plot_Manifold_Learning_Result():
     def save_images(self, images, name='result.jpg'):
         images = images.reshape(self.n_img_x * self.n_img_y, self.img_h, self.img_w)
         imwrite(self.DIR + "/" + name, self._merge(images, [self.n_img_y, self.n_img_x]))
+        #imsave(self.DIR + "/" + name, self._merge(images, [self.n_img_y, self.n_img_x]))
 
     def _merge(self, images, size):
         h, w = images.shape[1], images.shape[2]
@@ -452,8 +395,16 @@ def discrete_cmap(N, base_cmap=None):
     color_list = base(np.linspace(0, 1, N))
     cmap_name = base.name + str(N)
     return base.from_list(cmap_name, color_list, N)
-##############
 
+#### MAIN
+
+import torch
+import numpy as np
+import os
+import glob
+
+
+IMAGE_SIZE_MNIST = 28
 
 IMAGE_SIZE_MNIST = 28
 IMAGE_SIZE = 28
@@ -463,12 +414,13 @@ NUM_LABELS = 10
 #VALIDATION_SIZE = 5000  # Size of the validation set.
 
 
+
 results_path = dir_input + 'results'
 add_noise = False
 dim_z = 20
 n_hidden = 500
 learn_rate = 1e-3
-num_epochs = 20
+num_epochs = 1
 batch_size = 128
 PRR = True
 PRR_n_img_x = 10
@@ -489,22 +441,26 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
     # torch.cuda.manual_seed_all(222)
     # np.random.seed(222)
 
+
     #device = torch.device('cuda')
 
     RESULTS_DIR = results_path
     ADD_NOISE = add_noise
     n_hidden = n_hidden
     dim_img = IMAGE_SIZE_MNIST ** 2  # number of pixels for a MNIST image
+    #dim_z = dim_z
 
     # train
     n_epochs = num_epochs
-
+    #batch_size = batch_size
+    #learn_rate = learn_rate
 
     # Plot
-    #PRR_n_img_x = PRR_n_img_x  # number of images along x-axis in a canvas
-    #PRR_n_img_y = PRR_n_img_y  # number of images along y-axis in a canvas
-    #PRR_resize_factor = PRR_resize_factor  # resize factor for each image in a canvas
-
+    # PRR = PRR  # Plot Reproduce Result
+    # PRR_n_img_x = PRR_n_img_x  # number of images along x-axis in a canvas
+    # PRR_n_img_y = PRR_n_img_y  # number of images along y-axis in a canvas
+    # PRR_resize_factor = PRR_resize_factor  # resize factor for each image in a canvas
+    #
     # PMLR = PMLR  # Plot Manifold Learning Result
     # PMLR_n_img_x = PMLR_n_img_x  # number of images along x-axis in a canvas
     # PMLR_n_img_y = PMLR_n_img_y  # number of images along y-axis in a canvas
@@ -514,7 +470,6 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
 
     """ prepare MNIST data """
     #train_total_data, train_size, _, _, test_data, test_labels = mnist_data.prepare_MNIST_data()
-
     train_total_data, train_size, _, _, test_data, test_labels = prepare_MNIST_data()
     n_samples = train_size
 
@@ -535,6 +490,7 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
         x_PRR = test_data[0:PRR.n_tot_imgs, :]
 
         x_PRR_img = x_PRR.reshape(PRR.n_tot_imgs, IMAGE_SIZE_MNIST, IMAGE_SIZE_MNIST)
+        #print(x_PRR_img)
         PRR.save_images(x_PRR_img, name='input.jpg')
         print('saved:', 'input.jpg')
 
@@ -546,8 +502,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
             PRR.save_images(x_PRR_img, name='input_noise.jpg')
             print('saved:', 'input_noise.jpg')
 
-        x_PRR = x_PRR.float()
-        #x_PRR = torch.from_numpy(x_PRR).float()#.to(device)
+        #x_PRR = x_PRR.float()#.to(device)
+        x_PRR = torch.from_numpy(x_PRR).float()#.to(device)
 
     # Plot for manifold learning result
     if PMLR and dim_z == 2:
@@ -573,11 +529,9 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
     for epoch in range(n_epochs):
 
         # Random shuffling
-
-        #train_total_data = np.concatenate((train_images, train_labels), axis=1)
-        #np.random.shuffle(train_total_data)
-        #train_data_ = train_total_data[:, :-NUM_LABELS]
-        train_data_ = np.random.shuffle(train_total_data)
+        np.random.shuffle(train_total_data)
+        #train_data_ = train_total_data[:, :-mnist_data.NUM_LABELS]
+        train_data_ = train_total_data[:, :-NUM_LABELS]
 
         # Loop over all batches
         encoder.train()
@@ -594,8 +548,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
                 batch_xs_input = batch_xs_input * np.random.randint(2, size=batch_xs_input.shape)
                 batch_xs_input += np.random.randint(2, size=batch_xs_input.shape)
 
-            # batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float(),\#.to(device),\
-            #                                   torch.from_numpy(batch_xs_target).float()#.to(device)
+            #batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float().to(device),torch.from_numpy(batch_xs_target).float().to(device)
+            batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float(),torch.from_numpy(batch_xs_target).float()
 
             assert not torch.isnan(batch_xs_input).any()
             assert not torch.isnan(batch_xs_target).any()
@@ -643,6 +597,7 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
                 PMLR.save_scattered_image(z_PMLR.detach().cpu().numpy(), id_PMLR,
                                           name="/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
                 print('saved:', "/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
+
 
 
 main(results_path = results_path,add_noise = add_noise,dim_z = dim_z,n_hidden = n_hidden,learn_rate = learn_rate,num_epochs = num_epochs,
