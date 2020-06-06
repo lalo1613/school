@@ -309,6 +309,7 @@ IMAGE_SIZE_MNIST = 28
 
 
 
+
 """parsing and configuration"""
 
 
@@ -316,7 +317,7 @@ def parse_args():
     desc = "Pytorch implementation of 'Variational AutoEncoder (VAE)'"
     parser = argparse.ArgumentParser(description=desc)
 
-    parser.add_argument('--results_path', type=str, default='results',
+    parser.add_argument('--results_path', type=str, default= dir_input + 'results',
                         help='File path of output images')
 
     parser.add_argument('--add_noise', type=bool, default=False,
