@@ -166,7 +166,7 @@ test_labels = torch.tensor(test_labels)
 import numpy as np
 import matplotlib.pyplot as plt
 from imageio import imwrite     # instead of imsave
-from Pillow import imresize     # need to use resize instead
+#from Pillow import imresize     # need to use resize instead
 
 
 class Plot_Reproduce_Performance():
