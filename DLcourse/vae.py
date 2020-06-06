@@ -204,7 +204,8 @@ class Plot_Reproduce_Performance():
             i = int(idx % size[1])
             j = int(idx / size[1])
 
-            image_ = np.array(image.fromarray(w_,h_).resize())
+            image_ = np.array(image.resize(w_,h_))
+#            image_ = np.array(image.fromarray(w_,h_).resize())
             #image_ = imresize(image, size=(w_, h_), interp='bicubic')
 
             img[j * h_:j * h_ + h_, i * w_:i * w_ + w_] = image_
@@ -314,7 +315,7 @@ NUM_LABELS = 10
 
 results_path = dir_input + 'results'
 add_noise = False
-dim_z = '20'
+dim_z = 20
 n_hidden = 500
 learn_rate = 1e-3
 num_epochs = 20
@@ -338,13 +339,12 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
     # torch.cuda.manual_seed_all(222)
     # np.random.seed(222)
 
-    device = torch.device('cuda')
+    #device = torch.device('cuda')
 
     RESULTS_DIR = results_path
     ADD_NOISE = add_noise
     n_hidden = n_hidden
     dim_img = IMAGE_SIZE_MNIST ** 2  # number of pixels for a MNIST image
-    dim_z = dim_z
 
     # train
     n_epochs = num_epochs
@@ -370,8 +370,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
 
     """ create network """
     keep_prob = 0.99
-    encoder = Encoder(dim_img, n_hidden, dim_z, keep_prob).to(device)
-    decoder = Decoder(dim_z, n_hidden, dim_img, keep_prob).to(device)
+    encoder = Encoder(dim_img, n_hidden, dim_z, keep_prob)#.to(device)
+    decoder = Decoder(dim_z, n_hidden, dim_img, keep_prob)#.to(device)
     # + operator will return but .extend is inplace no return.
     optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=learn_rate)
     # vae.init_weights(encoder, decoder)
@@ -396,7 +396,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
             PRR.save_images(x_PRR_img, name='input_noise.jpg')
             print('saved:', 'input_noise.jpg')
 
-        x_PRR = torch.from_numpy(x_PRR).float().to(device)
+        x_PRR = x_PRR.float()
+        #x_PRR = torch.from_numpy(x_PRR).float()#.to(device)
 
     # Plot for manifold learning result
     if PMLR and dim_z == 2:
@@ -412,8 +413,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
             x_PMLR += np.random.randint(2, size=x_PMLR.shape)
 
 
-        z_ = torch.from_numpy(PMLR.z).float().to(device)
-        x_PMLR = torch.from_numpy(x_PMLR).float().to(device)
+        z_ = torch.from_numpy(PMLR.z).float()#.to(device)
+        x_PMLR = torch.from_numpy(x_PMLR).float()#.to(device)
 
 
     # train
@@ -441,8 +442,8 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
                 batch_xs_input = batch_xs_input * np.random.randint(2, size=batch_xs_input.shape)
                 batch_xs_input += np.random.randint(2, size=batch_xs_input.shape)
 
-            batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float().to(device), \
-                                              torch.from_numpy(batch_xs_target).float().to(device)
+            # batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float(),\#.to(device),\
+            #                                   torch.from_numpy(batch_xs_target).float()#.to(device)
 
             assert not torch.isnan(batch_xs_input).any()
             assert not torch.isnan(batch_xs_target).any()
@@ -492,5 +493,6 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
                 print('saved:', "/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
 
 
-main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,PRR,PRR_n_img_x,PRR_n_img_y,PRR_resize_factor,
-         PMLR,PMLR_n_img_x,PMLR_n_img_y,PMLR_resize_factor,PMLR_z_range,PMLR_n_samples)
+main(results_path = results_path,add_noise = add_noise,dim_z = dim_z,n_hidden = n_hidden,learn_rate = learn_rate,num_epochs = num_epochs,
+     batch_size = batch_size,PRR = PRR,PRR_n_img_x = PRR_n_img_x,PRR_n_img_y = PRR_n_img_y,PRR_resize_factor = PRR_resize_factor,
+     PMLR = PMLR,PMLR_n_img_x = PMLR_n_img_x,PMLR_n_img_y = PMLR_n_img_y,PMLR_resize_factor = PMLR_resize_factor,PMLR_z_range = PMLR_z_range,PMLR_n_samples = PMLR_n_samples)
