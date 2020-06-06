@@ -24,7 +24,7 @@ SOURCE_URL = 'http://yann.lecun.com/exdb/mnist/'
 IMAGE_SIZE = 28
 NUM_CHANNELS = 1
 PIXEL_DEPTH = 255
-NUM_LABELS = 10
+NUM_LABELS = 1 ## changed from one hot encoding to labels
 VALIDATION_SIZE = 5000  # Size of the validation set.
 
 dir_input = r"C:\Users\Bengal\Downloads\FashionMNIST" +"\\"
@@ -58,11 +58,13 @@ def extract_labels(filename, num_images):
         bytestream.read(8)
         buf = bytestream.read(1 * num_images)
         labels = numpy.frombuffer(buf, dtype=numpy.uint8).astype(numpy.int64)
+        #print(labels)
         num_labels_data = len(labels)
         one_hot_encoding = numpy.zeros((num_labels_data, NUM_LABELS))
         one_hot_encoding[numpy.arange(num_labels_data), labels] = 1
         one_hot_encoding = numpy.reshape(one_hot_encoding, [-1, NUM_LABELS])
-    return one_hot_encoding
+    #return one_hot_encoding
+    return labels
 
 # Prepare FASHION MNIST data
 def prepare_F_MNIST_data(use_norm_shift=False, use_norm_scale=True, use_data_augmentation=False):
@@ -80,15 +82,18 @@ def prepare_F_MNIST_data(use_norm_shift=False, use_norm_scale=True, use_data_aug
 
     # Generate a validation set.
     validation_data = train_data[:VALIDATION_SIZE, :]
-    validation_labels = train_labels[:VALIDATION_SIZE, :]
+    #validation_labels = train_labels[:VALIDATION_SIZE, :]
+    validation_labels = train_labels[:VALIDATION_SIZE]
     train_data = train_data[VALIDATION_SIZE:, :]
-    train_labels = train_labels[VALIDATION_SIZE:, :]
+    #train_labels = train_labels[VALIDATION_SIZE:, :]
+    train_labels = train_labels[VALIDATION_SIZE:]
 
-    train_total_data = numpy.concatenate((train_data, train_labels), axis=1)
+    #train_total_data = numpy.concatenate((train_data, train_labels), axis=1)
 
-    train_size = train_total_data.shape[0]
+    #train_size = train_total_data.shape[0]
+    train_size = train_data.shape[0]
 
-    return train_total_data, train_size, validation_data, validation_labels, test_data, test_labels
+    return  train_size, validation_data, validation_labels, test_data, test_labels, train_data, train_labels #, train_total_data
 
 ################ VAE
 
@@ -198,13 +203,35 @@ PMLR_resize_factor = 1.0
 PMLR_z_range = 2.0
 PMLR_n_samples = 5000
 
+############################
+# CHECK WHY THE SVM DONT RUN WITH THE INPUT I GIVE IT
+#train_size, _, _, test_data, test_labels, train_data, train_labels, train_total_data = prepare_F_MNIST_data()
+train_size, _, _, test_data, test_labels, train_data, train_labels = prepare_F_MNIST_data()
+
+#X = torch.from_numpy(train_total_data[:100, :-NUM_LABELS]).float()
+X = train_data
+y = train_labels
+#try to concatinate X and y for shuffling
+np.concatenate((train_data, train_labels), axis=1)
+#y = torch.from_numpy(train_total_data[:100, -NUM_LABELS:]).float()
+clf = make_pipeline(StandardScaler(), SVC(gamma='auto'))
+#X = np.array(X)
+#y = np.array(y)
+tf.size(y)
+clf.fit(X, y)
+clf.predict_proba()
+###########################
+
+
+
 def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,PRR,PRR_n_img_x,PRR_n_img_y,PRR_resize_factor,
          PMLR,PMLR_n_img_x,PMLR_n_img_y,PMLR_resize_factor,PMLR_z_range,PMLR_n_samples):
 
     dim_img = IMAGE_SIZE_MNIST ** 2  # number of pixels for a MNIST image
 
     """ prepare MNIST data """
-    train_total_data, train_size, _, _, test_data, test_labels = prepare_F_MNIST_data()
+    #train_size, _, _, test_data, test_labels, train_date, train_labels, train_total_data  = prepare_F_MNIST_data()
+    train_size, _, _, test_data, test_labels, train_date, train_labels = prepare_F_MNIST_data()
     n_samples = train_size
 
     """ create network """
@@ -220,6 +247,7 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
     for epoch in range(num_epochs):
 
         # Random shuffling
+        train_total_data = np.concatenate((train_data, train_labels), axis=1)
         np.random.shuffle(train_total_data)
         train_data_ = train_total_data[:, :-NUM_LABELS]
 
@@ -230,13 +258,15 @@ def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,
             offset = (i * batch_size) % (n_samples)
             batch_xs_input = train_data_[offset:(offset + batch_size), :]
             batch_xs_target = batch_xs_input
-
+            batch_train_labels = torch.from_numpy(train_total_data[offset:(offset + batch_size), -NUM_LABELS:]).float()
             batch_xs_input, batch_xs_target = torch.from_numpy(batch_xs_input).float(),torch.from_numpy(batch_xs_target).float()
 
             assert not torch.isnan(batch_xs_input).any()
             assert not torch.isnan(batch_xs_target).any()
-            train_labels = train_total_data[:, -NUM_LABELS:]
-            y, z, tot_loss, loss_likelihood, loss_divergence = get_loss(encoder, SVM, batch_xs_input, train_labels)
+
+            y, z, tot_loss, loss_likelihood, loss_divergence = get_loss(encoder, SVM, batch_xs_input, batch_train_labels)
+
+
 
             optimizer.zero_grad()
             tot_loss.backward()
