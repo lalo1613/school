@@ -305,213 +305,62 @@ def discrete_cmap(N, base_cmap=None):
 
 
 IMAGE_SIZE_MNIST = 28
+IMAGE_SIZE = 28
+NUM_CHANNELS = 1
+PIXEL_DEPTH = 255
+NUM_LABELS = 10
+#VALIDATION_SIZE = 5000  # Size of the validation set.
 
 
+results_path = dir_input + 'results'
+add_noise = False
+dim_z = '20'
+n_hidden = 500
+learn_rate = 1e-3
+num_epochs = 20
+batch_size = 128
+PRR = True
+PRR_n_img_x = 10
+PRR_n_img_y = 10
+PRR_resize_factor = 1.0
+PMLR = False
+PMLR_n_img_x = 20
+PMLR_n_img_y = 20
+PMLR_resize_factor = 1.0
+PMLR_z_range = 2.0
+PMLR_n_samples = 5000
 
-
-
-"""parsing and configuration"""
-
-
-def parse_args():
-    desc = "Pytorch implementation of 'Variational AutoEncoder (VAE)'"
-    parser = argparse.ArgumentParser(description=desc)
-
-    parser.add_argument('--results_path', type=str, default= dir_input + 'results',
-                        help='File path of output images')
-
-    parser.add_argument('--add_noise', type=bool, default=False,
-                        help='Boolean for adding salt & pepper noise to input image')
-
-    parser.add_argument('--dim_z', type=int, default='20', help='Dimension of latent vector', required=True)
-
-    parser.add_argument('--n_hidden', type=int, default=500, help='Number of hidden units in MLP')
-
-    parser.add_argument('--learn_rate', type=float, default=1e-3, help='Learning rate for Adam optimizer')
-
-    parser.add_argument('--num_epochs', type=int, default=20, help='The number of epochs to run')
-
-    parser.add_argument('--batch_size', type=int, default=128, help='Batch size')
-
-    parser.add_argument('--PRR', type=bool, default=True,
-                        help='Boolean for plot-reproduce-result')
-
-    parser.add_argument('--PRR_n_img_x', type=int, default=10,
-                        help='Number of images along x-axis')
-
-    parser.add_argument('--PRR_n_img_y', type=int, default=10,
-                        help='Number of images along y-axis')
-
-    parser.add_argument('--PRR_resize_factor', type=float, default=1.0,
-                        help='Resize factor for each displayed image')
-
-    parser.add_argument('--PMLR', type=bool, default=False,
-                        help='Boolean for plot-manifold-learning-result')
-
-    parser.add_argument('--PMLR_n_img_x', type=int, default=20,
-                        help='Number of images along x-axis')
-
-    parser.add_argument('--PMLR_n_img_y', type=int, default=20,
-                        help='Number of images along y-axis')
-
-    parser.add_argument('--PMLR_resize_factor', type=float, default=1.0,
-                        help='Resize factor for each displayed image')
-
-    parser.add_argument('--PMLR_z_range', type=float, default=2.0,
-                        help='Range for unifomly distributed latent vector')
-
-    parser.add_argument('--PMLR_n_samples', type=int, default=5000,
-                        help='Number of samples in order to get distribution of labeled data')
-
-    return check_args(parser.parse_args())
-
-
-
-def check_args(args):
-    # --results_path
-    try:
-        os.mkdir(args.results_path)
-    except(FileExistsError):
-        pass
-    # delete all existing files
-    files = glob.glob(args.results_path + '/*')
-    for f in files:
-        os.remove(f)
-
-    # --add_noise
-    try:
-        assert args.add_noise == True or args.add_noise == False
-    except:
-        print('add_noise must be boolean type')
-        return None
-
-    # --dim-z
-    try:
-        assert args.dim_z > 0
-    except:
-        print('dim_z must be positive integer')
-        return None
-
-    # --n_hidden
-    try:
-        assert args.n_hidden >= 1
-    except:
-        print('number of hidden units must be larger than one')
-
-    # --learn_rate
-    try:
-        assert args.learn_rate > 0
-    except:
-        print('learning rate must be positive')
-
-    # --num_epochs
-    try:
-        assert args.num_epochs >= 1
-    except:
-        print('number of epochs must be larger than or equal to one')
-
-    # --batch_size
-    try:
-        assert args.batch_size >= 1
-    except:
-        print('batch size must be larger than or equal to one')
-
-    # --PRR
-    try:
-        assert args.PRR == True or args.PRR == False
-    except:
-        print('PRR must be boolean type')
-        return None
-
-    if args.PRR == True:
-        # --PRR_n_img_x, --PRR_n_img_y
-        try:
-            assert args.PRR_n_img_x >= 1 and args.PRR_n_img_y >= 1
-        except:
-            print('PRR : number of images along each axis must be larger than or equal to one')
-
-        # --PRR_resize_factor
-        try:
-            assert args.PRR_resize_factor > 0
-        except:
-            print('PRR : resize factor for each displayed image must be positive')
-
-    # --PMLR
-    try:
-        assert args.PMLR == True or args.PMLR == False
-    except:
-        print('PMLR must be boolean type')
-        return None
-
-    if args.PMLR == True:
-        try:
-            assert args.dim_z == 2
-        except:
-            print('PMLR : dim_z must be two')
-
-        # --PMLR_n_img_x, --PMLR_n_img_y
-        try:
-            assert args.PMLR_n_img_x >= 1 and args.PMLR_n_img_y >= 1
-        except:
-            print('PMLR : number of images along each axis must be larger than or equal to one')
-
-        # --PMLR_resize_factor
-        try:
-            assert args.PMLR_resize_factor > 0
-        except:
-            print('PMLR : resize factor for each displayed image must be positive')
-
-        # --PMLR_z_range
-        try:
-            assert args.PMLR_z_range > 0
-        except:
-            print('PMLR : range for unifomly distributed latent vector must be positive')
-
-        # --PMLR_n_samples
-        try:
-            assert args.PMLR_n_samples > 100
-        except:
-            print('PMLR : Number of samples in order to get distribution of labeled data must be large enough')
-
-    return args
-
-
-
-
-
-def main(args):
+def main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,PRR,PRR_n_img_x,PRR_n_img_y,PRR_resize_factor,
+         PMLR,PMLR_n_img_x,PMLR_n_img_y,PMLR_resize_factor,PMLR_z_range,PMLR_n_samples):
 
 
     # torch.manual_seed(222)
     # torch.cuda.manual_seed_all(222)
     # np.random.seed(222)
 
-
     device = torch.device('cuda')
 
-    RESULTS_DIR = args.results_path
-    ADD_NOISE = args.add_noise
-    n_hidden = args.n_hidden
+    RESULTS_DIR = results_path
+    ADD_NOISE = add_noise
+    n_hidden = n_hidden
     dim_img = IMAGE_SIZE_MNIST ** 2  # number of pixels for a MNIST image
-    dim_z = args.dim_z
+    dim_z = dim_z
 
     # train
-    n_epochs = args.num_epochs
-    batch_size = args.batch_size
-    learn_rate = args.learn_rate
+    n_epochs = num_epochs
+
 
     # Plot
-    PRR = args.PRR  # Plot Reproduce Result
-    PRR_n_img_x = args.PRR_n_img_x  # number of images along x-axis in a canvas
-    PRR_n_img_y = args.PRR_n_img_y  # number of images along y-axis in a canvas
-    PRR_resize_factor = args.PRR_resize_factor  # resize factor for each image in a canvas
+    #PRR_n_img_x = PRR_n_img_x  # number of images along x-axis in a canvas
+    #PRR_n_img_y = PRR_n_img_y  # number of images along y-axis in a canvas
+    #PRR_resize_factor = PRR_resize_factor  # resize factor for each image in a canvas
 
-    PMLR = args.PMLR  # Plot Manifold Learning Result
-    PMLR_n_img_x = args.PMLR_n_img_x  # number of images along x-axis in a canvas
-    PMLR_n_img_y = args.PMLR_n_img_y  # number of images along y-axis in a canvas
-    PMLR_resize_factor = args.PMLR_resize_factor  # resize factor for each image in a canvas
-    PMLR_z_range = args.PMLR_z_range  # range for random latent vector
-    PMLR_n_samples = args.PMLR_n_samples  # number of labeled samples to plot a map from input data space to the latent space
+    # PMLR = PMLR  # Plot Manifold Learning Result
+    # PMLR_n_img_x = PMLR_n_img_x  # number of images along x-axis in a canvas
+    # PMLR_n_img_y = PMLR_n_img_y  # number of images along y-axis in a canvas
+    # PMLR_resize_factor = PMLR_resize_factor  # resize factor for each image in a canvas
+    # PMLR_z_range = PMLR_z_range  # range for random latent vector
+    # PMLR_n_samples = PMLR_n_samples  # number of labeled samples to plot a map from input data space to the latent space
 
     """ prepare MNIST data """
     #train_total_data, train_size, _, _, test_data, test_labels = mnist_data.prepare_MNIST_data()
@@ -530,7 +379,7 @@ def main(args):
     """ training """
     # Plot for reproduce performance
     if PRR:
-        PRR = plot_utils.Plot_Reproduce_Performance(RESULTS_DIR, PRR_n_img_x, PRR_n_img_y, IMAGE_SIZE_MNIST,
+        PRR = Plot_Reproduce_Performance(RESULTS_DIR, PRR_n_img_x, PRR_n_img_y, IMAGE_SIZE_MNIST,
                                                     IMAGE_SIZE_MNIST, PRR_resize_factor)
 
         x_PRR = test_images[0:PRR.n_tot_imgs, :]
@@ -552,7 +401,7 @@ def main(args):
     # Plot for manifold learning result
     if PMLR and dim_z == 2:
 
-        PMLR = plot_utils.Plot_Manifold_Learning_Result(RESULTS_DIR, PMLR_n_img_x, PMLR_n_img_y, IMAGE_SIZE_MNIST,
+        PMLR = Plot_Manifold_Learning_Result(RESULTS_DIR, PMLR_n_img_x, PMLR_n_img_y, IMAGE_SIZE_MNIST,
                                                         IMAGE_SIZE_MNIST, PMLR_resize_factor, PMLR_z_range)
 
         x_PMLR = test_images[0:PMLR_n_samples, :]
@@ -575,7 +424,7 @@ def main(args):
         # Random shuffling
         train_total_data = np.concatenate((train_images, train_labels), axis=1)
         np.random.shuffle(train_total_data)
-        train_data_ = train_total_data[:, :-mnist_data.NUM_LABELS]
+        train_data_ = train_total_data[:, :-NUM_LABELS]
 
         # Loop over all batches
         encoder.train()
@@ -643,12 +492,5 @@ def main(args):
                 print('saved:', "/PMLR_map_epoch_%02d" % (epoch) + ".jpg")
 
 
-if __name__ == '__main__':
-
-    # parse arguments
-    args = parse_args()
-    if args is None:
-        exit()
-
-    # main
-    main(args)
+main(results_path,add_noise,dim_z,n_hidden,learn_rate,num_epochs,batch_size,PRR,PRR_n_img_x,PRR_n_img_y,PRR_resize_factor,
+         PMLR,PMLR_n_img_x,PMLR_n_img_y,PMLR_resize_factor,PMLR_z_range,PMLR_n_samples)
