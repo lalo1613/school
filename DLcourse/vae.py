@@ -126,9 +126,9 @@ from mnist import MNIST
 
 import torch
 import numpy as np
-import mnist_data
+#import mnist_data
 import os
-import plot_utils
+#import plot_utils
 import glob
 
 import argparse
