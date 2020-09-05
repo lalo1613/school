@@ -7,7 +7,7 @@ from mnist import MNIST
 import numpy as np
 import torch
 from DLcourse.lenet5 import Net_BatchNorm, Net_Dropout, Net_Dropout_BatchNorm, Net_None
-from DLcourse.training import Training_LENET
+#from DLcourse.training import Training_LENET
 from DLcourse.testing import TestingNet
 import matplotlib.pyplot as plt
 
