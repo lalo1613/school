@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 import os
 import re
 from tqdm import tqdm
+import torch
 import face_recognition
 from PIL import Image
 
 
 # loading input metadata
-input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
+# input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
+input_path = r"C:\Users\Bengal\Desktop\project/"
+
 train_sample_metadata = pd.read_json(input_path+'metadata.json').T
 train_sample_metadata.head()
 
@@ -93,5 +96,21 @@ img = resized_output_path+train_labels_df.loc[0]["image"]
 img = cv2.imread(img)
 temp = grayConversion(img)
 cv2.imshow("GrayScale", temp)
+
+# labels = resized_output_path+train_labels_df["label"]
+train = []
+for img in tqdm(resized_output_path+train_labels_df["image"]):
+    img = cv2.imread(img)
+    temp = grayConversion(img)
+    train.append(temp)
+
+train = np.array(train)
+np.array(train).shape   # (7442,256,256)
+
+train = torch.tensor(train).float()
+train_labels = torch.tensor(labels)
+
+
+
 
 
