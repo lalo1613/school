@@ -78,3 +78,20 @@ for video_name in tqdm(all_video_names):
         im.save(resized_output_path+video_name+im_num+".jpg", "JPEG")
 
 
+train_images = os.listdir(resized_output_path)
+train_labels = [train_sample_metadata.loc[vid+".mp4"]['label'] for vid in [re.sub('[0-9]+.jpg','',item) for item in os.listdir(resized_output_path)]]
+train_labels_df = pd.DataFrame(zip(train_images, train_labels), columns=["image", "label"])
+
+
+def grayConversion(image):
+    grayValue = 0.07 * image[:,:,2] + 0.72 * image[:,:,1] + 0.21 * image[:,:,0]
+    gray_img = grayValue.astype(np.uint8)
+    return gray_img
+
+
+img = resized_output_path+train_labels_df.loc[0]["image"]
+img = cv2.imread(img)
+temp = grayConversion(img)
+cv2.imshow("GrayScale", temp)
+
+
