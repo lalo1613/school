@@ -97,7 +97,8 @@ img = cv2.imread(img)
 temp = grayConversion(img)
 cv2.imshow("GrayScale", temp)
 
-# labels = resized_output_path+train_labels_df["label"]
+labels = (train_labels_df["label"] == 'REAL').apply(int)
+
 train = []
 for img in tqdm(resized_output_path+train_labels_df["image"]):
     img = cv2.imread(img)
@@ -109,6 +110,9 @@ np.array(train).shape   # (7442,256,256)
 
 train = torch.tensor(train).float()
 train_labels = torch.tensor(labels)
+
+acc_none, acc_none_tst = Training_LENET(train_images = train_images, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= None, n_epochs = 15)
+
 
 
 
