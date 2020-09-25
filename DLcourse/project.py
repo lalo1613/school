@@ -6,9 +6,10 @@ import os
 import re
 from tqdm import tqdm
 import torch
-import face_recognition
+# import face_recognition
 from PIL import Image
 from DLcourse.training_cnn import Training_LENET
+import pickle
 
 
 # loading input metadata
@@ -93,18 +94,14 @@ def grayConversion(image):
     return gray_img
 
 
-img = resized_output_path+train_labels_df.loc[0]["image"]
-img = cv2.imread(img)
-temp = grayConversion(img)
-cv2.imshow("GrayScale", temp)
-
 labels = (train_labels_df["label"] == 'REAL').apply(int)
-
 train = []
 for img in tqdm(resized_output_path+train_labels_df["image"]):
     img = cv2.imread(img)
     temp = grayConversion(img)
     train.append(temp)
+
+
 
 train = np.array(train)
 np.array(train).shape   # (7442,256,256)
@@ -112,7 +109,21 @@ np.array(train).shape   # (7442,256,256)
 train = torch.tensor(train).float()
 train_labels = torch.tensor(labels)
 
-acc_none, acc_none_tst = Training_LENET(train_images = train, train_labels = train_labels,test_images = test_images, test_labels = test_labels, dir_input = dir_input ,NetName = Net_None,optimizer_input= None, n_epochs = 15)
+train_for_pickle = {'train':train,'train_labels':train_labels}
+
+# save train as pickle
+# with open(input_path+"/train_data.pickle", 'wb') as handle:
+#     pickle.dump(train_for_pickle, handle)
+
+# upload train
+
+with open(input_path+"/train_data.pickle", 'rb') as handle:
+    pick = pickle.load(handle)
+
+train, train_labels = pick['train'],  pick['train_labels']
+
+
+acc = Training_LENET(train_images = train, train_labels = train_labels,  dir_input = input_path ,optimizer_input= None, n_epochs = 15)
 
 
 
