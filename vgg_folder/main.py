@@ -231,6 +231,8 @@ def main():
 
     df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
     df.to_csv(save_dir+"accuracy_per_epoch.csv",index=None)
+    fig = df.plot(kind='line', x='epoch', y='acc').get_figure()
+    fig.savefig(save_dir+"accuracy_per_epoch_plt.pdf")
 
 if __name__ == '__main__':
     main()
