@@ -11,6 +11,8 @@ from tqdm import tqdm
 from DLcourse.preprocessing import pre_process_dataset
 
 save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
+# save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
+
 model_names = 'vgg19'
 batch_size = 128
 workers = 4
@@ -193,6 +195,10 @@ def main():
     print("Uploading Data")
     train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
     test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
+    # Chen path - need to inert the videos
+    # train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
+    # test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
+
 
     train_dataset, train_dataset_labels = pre_process_dataset(train_input_path, "train")
     test_dataset, test_dataset_labels = pre_process_dataset(test_input_path, "test")
