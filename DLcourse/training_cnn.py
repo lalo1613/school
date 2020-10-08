@@ -3,18 +3,20 @@ import numpy as np
 import pandas as pd
 from DLcourse.lenet5 import Net
 from tqdm import tqdm
+from DLcourse.vgg_lite import vgg16_bn
 
-def Training_LENET(train_images, train_labels, dir_input , optimizer_input = None, n_epochs = 1):
+def Training_LENET(train_images, train_labels, dir_input , n_epochs = 1):
     net = Net()
     #test_images = test_images.reshape((test_images.shape[0], 1, test_images.shape[1], test_images.shape[1]))
     # loading CNN (net's class defined in separate script)
     # defining a Loss function and parameter optimizer
-    if optimizer_input is  None:
-        optimizer_input = ''
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-    else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9 , weight_decay=0.01)
-
+    # if optimizer_input is  None:
+    #     optimizer_input = ''
+    #     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    # else:
+    #     optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9 , weight_decay=0.01)
+    optimizer_input = ''
+    optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
     criterion = torch.nn.CrossEntropyLoss()
     acc_epoc = []
     acc_epoc_test = []
@@ -32,7 +34,9 @@ def Training_LENET(train_images, train_labels, dir_input , optimizer_input = Non
             optimizer.zero_grad()
 
             # forward + backward + optimize
-            outputs = net(inputs)
+            # outputs = net(inputs)
+            outputs = vgg16_bn()
+
 
             loss = criterion(outputs, labels)
             loss.backward()
@@ -40,10 +44,13 @@ def Training_LENET(train_images, train_labels, dir_input , optimizer_input = Non
 
             # print statistics
             running_loss += loss.item()
-            #print("loss "+str(running_loss/(i+1)))
+            print("loss "+str(running_loss/(i+1)))
 
          #print('outputs',torch.argmax(input = outputs, dim = 1), 'labels', labels)
-        acc_epoc.append([epoch,np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])
+        print('preds: ',np.array(torch.argmax(input=outputs, dim=1)),'labels: ', np.array(labels))
+        last_acc = np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))
+        print('# epoch: {}, acc = {}'.format(epoch,last_acc))
+        acc_epoc.append([epoch,last_acc])
         #outputs_test = net(test_images)
         #acc_epoc_test.append([epoch,np.mean(np.array(torch.argmax(input=outputs_test, dim=1)) == np.array(test_labels))])
         #acc_epoc = acc_epoc.append([epoch, np.mean(np.array(torch.argmax(input=outputs, dim=1)) == np.array(labels))])

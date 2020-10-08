@@ -10,7 +10,7 @@ import torch
 from PIL import Image
 from DLcourse.training_cnn import Training_LENET
 import pickle
-
+from DLcourse.vgg import VGG
 
 # loading input metadata
 # input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
@@ -102,7 +102,6 @@ for img in tqdm(resized_output_path+train_labels_df["image"]):
     train.append(temp)
 
 
-
 train = np.array(train)
 np.array(train).shape   # (7442,256,256)
 
@@ -122,11 +121,15 @@ with open(input_path+"/train_data.pickle", 'rb') as handle:
 
 train, train_labels = pick['train'],  pick['train_labels']
 
-
-acc = Training_LENET(train_images = train, train_labels = train_labels,  dir_input = input_path ,optimizer_input= None, n_epochs = 15)
-
+acc = Training_LENET(train_images = train, train_labels = train_labels,  dir_input = input_path , n_epochs = 1)
 
 
+model_names = sorted(name for name in VGG.__dict__
+    if name.islower() and not name.startswith("__")
+                     and name.startswith("vgg")
+                     and callable(VGG.__dict__[name]))
+
+model = VGG.__dict__['vgg19']()
 
 
 

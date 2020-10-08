@@ -16,6 +16,9 @@ class Net(nn.Module):
         self.batchnorm2 = nn.BatchNorm2d(12)
         self.dropout = nn.Dropout2d(0.25)
 
+
+
+
   # define forward function
     def forward(self, t):
         # conv 1

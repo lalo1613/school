@@ -56,6 +56,6 @@ def Training_LSTM(train_input, train_output, test_input, test_output, dir_input 
 
     print('Finished Training')
     print('acc', acc_epoc)
-    torch.save(net.state_dict(), dir_input+"outputs/"+NetName().__class__.__name__+".pth")
+    torch.save(net.state_dict(), dir_input+'outputs\\'+NetName().__class__.__name__+".pth")
     return pd.DataFrame(data = acc_epoc, columns = ['epoch','perplexity']) , \
            pd.DataFrame(data = acc_epoc_test, columns = ['epoch','perplexity'])
