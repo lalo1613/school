@@ -22,6 +22,7 @@ epochs = 2
 print_freq = 20
 res_list = []
 
+
 def train(train_loader, model, criterion, optimizer, epoch):
     """
         Run one train epoch
@@ -230,7 +231,8 @@ def main():
              'prec1': prec1})
 
     df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
-    df.to_csv(save_dir+"accuracy_per_epoch.csv",index=None)
+    df.to_csv(save_dir+"accuracy_per_epoch.csv", index=None)
+
 
 if __name__ == '__main__':
     main()
