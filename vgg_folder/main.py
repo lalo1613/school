@@ -1,7 +1,11 @@
 import torch
 import time
+from datetime import datetime
 import os
+import re
+import pandas as pd
 import math
+import pickle
 from vgg_folder import vgg
 from tqdm import tqdm
 from DLcourse.preprocessing import pre_process_dataset
@@ -10,14 +14,13 @@ save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
 model_names = 'vgg19'
 batch_size = 128
 workers = 4
-best_prec1 = 0
 momentum = 0.9
-lr = 0.05
+lr = 0.3
 weight_decay = 5e-4
 start_epoch = 0
-epochs = 1
+epochs = 2
 print_freq = 20
-
+res_list = []
 
 def train(train_loader, model, criterion, optimizer, epoch):
     """
@@ -111,11 +114,16 @@ def validate(val_loader, model, criterion):
     return top1.avg
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(input_path, data_dict):
     """
     Save the training model
     """
-    torch.save(state, filename)
+    time_str = data_dict.get("time_of_epoch")
+    time_str = re.sub("[ \-:]","_",time_str.__str__()[:-7])
+    with open(input_path+time_str+"_epoch"+str(data_dict.get("epoch"))+"_data.pkl", "wb") as file:
+        pickle.dump(data_dict, file)
+
+    res_list.append(data_dict.get("prec1"))
 
 
 class AverageMeter(object):
@@ -170,6 +178,8 @@ def our_loader(dataset, dataset_labels):
 
 
 def main():
+    best_prec1 = 0
+
     # Check the save_dir exists or not
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -189,7 +199,6 @@ def main():
     train_loader = our_loader(train_dataset, train_dataset_labels)
     test_loader = our_loader(test_dataset, test_dataset_labels)
 
-    # todo: delete
     train_loader = train_loader[:5]
     test_loader = test_loader[:2]
 
@@ -212,14 +221,16 @@ def main():
         prec1 = validate(test_loader, model, criterion)
 
         # remember best prec@1 and save checkpoint
-        is_best = prec1 > best_prec1
         best_prec1 = max(prec1, best_prec1)
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'state_dict': model.state_dict(),
-            'best_prec1': best_prec1,
-        }, is_best, filename=os.path.join(save_dir, 'checkpoint_{}.tar'.format(epoch)))
+        save_checkpoint(save_dir,
+            {'time_of_epoch': datetime.now(),
+             'epoch': epoch,
+             'state_dict': model.state_dict(),
+             'best_prec1': best_prec1,
+             'prec1': prec1})
 
+    df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
+    df.to_csv(save_dir+"accuracy_per_epoch.csv",index=None)
 
 if __name__ == '__main__':
     main()
