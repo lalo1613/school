@@ -6,7 +6,7 @@ import os
 import re
 from tqdm import tqdm
 import torch
-import face_recognition
+#import face_recognition
 from PIL import Image
 
 
@@ -114,13 +114,13 @@ def pre_process_dataset(input_path, set_str):
 # train_set, train_labels = pre_process_dataset(train_input_path, "train")
 # test_set, test_labels = pre_process_dataset(test_input_path, "test")
 
-
-def grayConversion(image):
-    grayValue = 0.07 * image[:,:,2] + 0.72 * image[:,:,1] + 0.21 * image[:,:,0]
-    gray_img = grayValue.astype(np.uint8)
-    return gray_img
-
-
-img = cv2.imread(r"C:\Users\omri_\Downloads\train_videos\face_images_anzenqcwqo/face_image5.jpg")
-temp = grayConversion(img)
-cv2.imwrite(r"C:\Users\omri_\Downloads/gray_example.jpg", temp)
+#
+# def grayConversion(image):
+#     grayValue = 0.07 * image[:,:,2] + 0.72 * image[:,:,1] + 0.21 * image[:,:,0]
+#     gray_img = grayValue.astype(np.uint8)
+#     return gray_img
+#
+#
+# img = cv2.imread(r"C:\Users\omri_\Downloads\train_videos\face_images_anzenqcwqo/face_image5.jpg")
+# temp = grayConversion(img)
+# cv2.imwrite(r"C:\Users\omri_\Downloads/gray_example.jpg", temp)
