@@ -4,6 +4,8 @@ from datetime import datetime
 import os
 import re
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import math
 import pickle
 from vgg_folder import vgg
@@ -17,11 +19,11 @@ model_names = 'vgg19'
 batch_size = 128
 workers = 4
 momentum = 0.9
-lr = 0.3
+lr = 0.001
 weight_decay = 5e-4
 start_epoch = 0
-epochs = 2
-print_freq = 20
+epochs = 5
+print_freq = 15
 res_list = []
 
 
@@ -180,6 +182,28 @@ def our_loader(dataset, dataset_labels):
     return list(zip(image_torch_list, label_torch_list))
 
 
+def final_pred(val_loader, labels):
+    with open(r"C:\Users\omri_\Downloads\train_videos\saving_dir\2020_10_09_16_53_17_epoch4_data.pkl", "rb") as file:
+        epoch_dict = pickle.load(file)
+    state_dict = epoch_dict.get("state_dict")
+
+    model = vgg.__dict__['vgg19']()
+    model.features = torch.nn.DataParallel(model.features)
+    model.load_state_dict(state_dict, strict=False)
+
+    val_loader = test_loader
+    for i, (input, target) in enumerate(val_loader):
+        print(i)
+        # compute output
+        with torch.no_grad():
+            output = model(input)
+        output = output.float()
+
+    print("Model's state_dict:")
+    for param_tensor in state_dict:
+        print(param_tensor, "\t", state_dict[param_tensor].size())
+
+
 def main():
     best_prec1 = 0
 
@@ -188,7 +212,6 @@ def main():
         os.makedirs(save_dir)
 
     model = vgg.__dict__['vgg19']()
-
     model.features = torch.nn.DataParallel(model.features)
 
     # upload our data
@@ -199,15 +222,11 @@ def main():
     # train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
     # test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
 
-
     train_dataset, train_dataset_labels = pre_process_dataset(train_input_path, "train")
     test_dataset, test_dataset_labels = pre_process_dataset(test_input_path, "test")
 
     train_loader = our_loader(train_dataset, train_dataset_labels)
     test_loader = our_loader(test_dataset, test_dataset_labels)
-
-    train_loader = train_loader[:5]
-    test_loader = test_loader[:2]
 
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss()
@@ -236,10 +255,10 @@ def main():
              'best_prec1': best_prec1,
              'prec1': prec1})
 
-    df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
-    df.to_csv(save_dir+"accuracy_per_epoch.csv", index=None)
-    fig = df.plot(kind='line', x='epoch', y='acc').get_figure()
-    fig.savefig(save_dir+"accuracy_per_epoch_plt.pdf")
+        df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
+        df.to_csv(save_dir+"accuracy_per_epoch"+str(epoch)+".csv", index=None)
+        fig = df.plot(kind='line', x='epoch', y='acc',).get_figure()
+        fig.savefig(save_dir+"accuracy_per_epoch_plt"+str(epoch)+".pdf")
 
 
 if __name__ == '__main__':

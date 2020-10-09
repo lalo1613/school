@@ -10,7 +10,7 @@ import torch
 from PIL import Image
 from DLcourse.training_cnn import Training_LENET
 import pickle
-from DLcourse.vgg import VGG
+from DLcourse.vgg_old import VGG
 
 # loading input metadata
 # input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
