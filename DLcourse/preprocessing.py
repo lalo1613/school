@@ -6,7 +6,7 @@ import os
 import re
 from tqdm import tqdm
 import torch
-#import face_recognition
+import face_recognition
 from PIL import Image
 
 
@@ -25,8 +25,8 @@ def pre_process_dataset(input_path, set_str):
         with open(input_path + set_str + "_torch.pkl", "rb") as file:
             load_dict = pickle.load(file)
 
-        dataset, dataset_labels = load_dict["dataset"], load_dict["dataset_labels"]
-        return dataset, dataset_labels
+        dataset, dataset_labels, video_labels = load_dict["dataset"], load_dict["dataset_labels"], load_dict["video_belongings"]
+        return dataset, dataset_labels, video_labels
 
     metadata = pd.read_json(input_path+'metadata.json').T
 
@@ -99,11 +99,12 @@ def pre_process_dataset(input_path, set_str):
     dataset = torch.tensor(dataset).float()
     dataset_labels = (set_labels_df["label"] == "REAL").apply(int)
     dataset_labels = torch.tensor(dataset_labels)
+    video_names = set_labels_df["image"].apply(lambda x: re.sub("[0-9]+\.jpg","",x))
 
     with open(input_path+set_str+"_torch.pkl","wb") as file:
-        pickle.dump({"dataset":dataset, "dataset_labels": dataset_labels}, file)
+        pickle.dump({"dataset":dataset, "dataset_labels": dataset_labels, "video_belongings": video_names}, file)
 
-    return dataset, dataset_labels
+    return dataset, dataset_labels, video_names
 
 
 # # loading test_input data

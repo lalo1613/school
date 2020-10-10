@@ -12,20 +12,20 @@ from vgg_folder import vgg
 from tqdm import tqdm
 from DLcourse.preprocessing import pre_process_dataset
 
-# save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
-save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
+save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
+# save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
 
 model_names = 'vgg19'
 batch_size = 128
 workers = 4
 momentum = 0.9
-lr = 0.001
+lr = 0.01
 weight_decay = 5e-4
 start_epoch = 0
 epochs = 20
-print_freq = 20
+print_freq = 2
 res_list = []
-res_list_av=[]
+res_list_av = []
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -173,15 +173,46 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
+# def accuracy(output, target):
+#     output = output.detach().numpy()
+#     output = pd.DataFrame(output).apply(lambda x: math.exp(x.loc[0]) / (math.exp(x.loc[0]) + math.exp(x.loc[1])), 1)
+#     target = pd.Series(target.numpy())
+
+
 
 def our_loader(dataset, dataset_labels):
     image_torch_list = []
     label_torch_list = []
-    for i in range(math.ceil(dataset.shape[0]//batch_size)):
+    for i in range(math.ceil(dataset.shape[0]/batch_size)):
         image_torch_list.append(dataset[(128*i):((128*(i+1)))])
         label_torch_list.append(dataset_labels[(128*i):((128*(i+1)))])
 
     return list(zip(image_torch_list, label_torch_list))
+
+
+def final_pred(val_loader, val_video_labels):
+    with open(r"C:\Users\omri_\Downloads\train_videos\saving_dir\2020_10_10_11_19_07_epoch19_data.pkl", "rb") as file:
+        epoch_dict = pickle.load(file)
+    state_dict = epoch_dict.get("state_dict")
+
+    model = vgg.__dict__['vgg19']()
+    model.load_state_dict(state_dict, strict=False)
+
+    val_loader = test_loader
+    val_video_labels = test_video_labels
+
+    all_outputs = []
+    all_labels = []
+    for i, (input, target) in tqdm(enumerate(val_loader)):
+        print(i)
+        output = model(input)
+        output = output.detach().numpy()
+        output = pd.DataFrame(output).apply(lambda x: math.exp(x.loc[0])/(math.exp(x.loc[0]) + math.exp(x.loc[1])), 1)
+        target = pd.Series(target.numpy())
+        all_outputs.extend(output.tolist())
+        all_labels.extend(target.tolist())
+
+    df = pd.DataFrame(zip(all_outputs, all_labels, val_video_labels), columns=["proba", "label", "video_name"])
 
 
 def main():
@@ -192,30 +223,28 @@ def main():
         os.makedirs(save_dir)
 
     model = vgg.__dict__['vgg19']()
-
-    model.features = torch.nn.DataParallel(model.features)
+    # model.features = torch.nn.DataParallel(model.features)
 
     # upload our data
     print("Uploading Data")
-    # train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
-    # test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
+    train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
+    test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
     # Chen path - need to inert the videos
-    train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
-    test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
+    # train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
+    # test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
 
-
-    train_dataset, train_dataset_labels = pre_process_dataset(train_input_path, "train")
-    test_dataset, test_dataset_labels = pre_process_dataset(test_input_path, "test")
+    train_dataset, train_dataset_labels, train_video_labels = pre_process_dataset(train_input_path, "train")
+    test_dataset, test_dataset_labels, test_video_labels = pre_process_dataset(test_input_path, "test")
 
     train_loader = our_loader(train_dataset, train_dataset_labels)
     test_loader = our_loader(test_dataset, test_dataset_labels)
 
     # todo Delete this 2 lines
-    # train_loader = train_loader[:5]
-    # test_loader = test_loader[:2]
+    train_loader = train_loader[:5]
+    test_loader = test_loader[:2]
 
     # define loss function (criterion) and optimizer
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([1/0.835673, 1/0.164327]))
     optimizer = torch.optim.SGD(model.parameters(), lr,
                                 momentum=momentum,
                                 weight_decay=weight_decay)
