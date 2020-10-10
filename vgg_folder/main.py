@@ -12,8 +12,8 @@ from vgg_folder import vgg
 from tqdm import tqdm
 from DLcourse.preprocessing import pre_process_dataset
 
-save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
-# save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
+# save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
+save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
 
 model_names = 'vgg19'
 batch_size = 128
@@ -154,7 +154,7 @@ class AverageMeter(object):
 
 def adjust_learning_rate(optimizer, epoch, lr):
     """Sets the learning rate to the initial LR decayed by 2 every 30 epochs"""
-    lr = lr * (0.5 ** (epoch // 30))
+    lr = lr * (0.5 ** (epoch // 10))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
@@ -174,11 +174,6 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-# def accuracy(output, target):
-#     output = output.detach().numpy()
-#     output = pd.DataFrame(output).apply(lambda x: math.exp(x.loc[0]) / (math.exp(x.loc[0]) + math.exp(x.loc[1])), 1)
-#     target = pd.Series(target.numpy())
-
 
 def our_loader(dataset, dataset_labels):
     image_torch_list = []
@@ -191,6 +186,17 @@ def our_loader(dataset, dataset_labels):
 
 
 def video_preds_acc(val_loader, val_video_labels, pred_model):
+
+    # todo comment out / delete
+
+    with open(r"C:\Users\Bengal\Desktop\project\saving_dir\2020_10_10_14_47_07_epoch1_data.pkl", 'rb') as file:
+        load_dict = pickle.load(file)
+    state_dict = load_dict.get("state_dict")
+    model = vgg.__dict__['vgg19']()
+    model.load_state_dict(state_dict)
+    pred_model = model
+    val_loader = test_loader
+    val_video_labels = test_video_labels
 
     all_outputs = []
     all_labels = []
@@ -223,11 +229,11 @@ def main():
 
     # upload our data
     print("Uploading Data")
-    train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
-    test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
+    # train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
+    # test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
     # Chen path - need to inert the videos
-    # train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
-    # test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
+    train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
+    test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
 
     train_dataset, train_dataset_labels, train_video_labels = pre_process_dataset(train_input_path, "train")
     test_dataset, test_dataset_labels, test_video_labels = pre_process_dataset(test_input_path, "test")
@@ -236,8 +242,8 @@ def main():
     test_loader = our_loader(test_dataset, test_dataset_labels)
 
     # todo Delete this 2 lines
-    train_loader = train_loader[:5]
-    test_loader = test_loader[:2]
+    # train_loader = train_loader[:5]
+    # test_loader = test_loader[:2]
 
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([1/0.835673, 1/0.164327]))

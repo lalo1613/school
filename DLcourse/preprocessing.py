@@ -6,7 +6,7 @@ import os
 import re
 from tqdm import tqdm
 import torch
-import face_recognition
+#import face_recognition
 from PIL import Image
 
 
