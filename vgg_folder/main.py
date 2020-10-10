@@ -24,6 +24,7 @@ weight_decay = 5e-4
 start_epoch = 0
 epochs = 20
 print_freq = 2
+vid_acc_list = []
 res_list = []
 res_list_av = []
 
@@ -179,7 +180,6 @@ def accuracy(output, target, topk=(1,)):
 #     target = pd.Series(target.numpy())
 
 
-
 def our_loader(dataset, dataset_labels):
     image_torch_list = []
     label_torch_list = []
@@ -190,22 +190,12 @@ def our_loader(dataset, dataset_labels):
     return list(zip(image_torch_list, label_torch_list))
 
 
-def final_pred(val_loader, val_video_labels):
-    with open(r"C:\Users\omri_\Downloads\train_videos\saving_dir\2020_10_10_11_19_07_epoch19_data.pkl", "rb") as file:
-        epoch_dict = pickle.load(file)
-    state_dict = epoch_dict.get("state_dict")
-
-    model = vgg.__dict__['vgg19']()
-    model.load_state_dict(state_dict, strict=False)
-
-    val_loader = test_loader
-    val_video_labels = test_video_labels
+def video_preds_acc(val_loader, val_video_labels, pred_model):
 
     all_outputs = []
     all_labels = []
     for i, (input, target) in tqdm(enumerate(val_loader)):
-        print(i)
-        output = model(input)
+        output = pred_model(input)
         output = output.detach().numpy()
         output = pd.DataFrame(output).apply(lambda x: math.exp(x.loc[0])/(math.exp(x.loc[0]) + math.exp(x.loc[1])), 1)
         target = pd.Series(target.numpy())
@@ -213,6 +203,12 @@ def final_pred(val_loader, val_video_labels):
         all_labels.extend(target.tolist())
 
     df = pd.DataFrame(zip(all_outputs, all_labels, val_video_labels), columns=["proba", "label", "video_name"])
+    video_means = df.groupby(["video_name"]).mean()
+    thr = sorted(video_means.proba)[round(video_means.shape[0]*0.164327)-1]
+    video_means["final_pred"] = video_means["proba"] <= thr
+
+    final_acc = (video_means.final_pred == video_means.label).mean()
+    return final_acc
 
 
 def main():
@@ -266,25 +262,38 @@ def main():
 
         # remember best prec@1 and save checkpoint
         best_prec1 = max(prec1, best_prec1)
+
+        # video predictions accuracy
+        vid_acc = video_preds_acc(test_loader,test_video_labels, model)
+        vid_acc_list.append(vid_acc)
+        print("Current video accuracy: "+str(vid_acc))
+
         save_checkpoint(save_dir,
             {'time_of_epoch': datetime.now(),
              'epoch': epoch,
              'state_dict': model.state_dict(),
              'best_prec1': best_prec1,
              'prec1_av': prec1,
-             'prec1':prec1_current})
+             'prec1':prec1_current,
+             'video_acc': vid_acc})
 
-        df = pd.DataFrame(zip(range(len(res_list)),res_list), columns=["epoch", "acc"])
+        df = pd.DataFrame(zip(range(len(res_list)), res_list), columns=["epoch", "acc"])
         df.to_csv(save_dir+"accuracy_per_epoch_on_val_"+str(epoch)+".csv", index=None)
 
         df_av = pd.DataFrame(zip(range(len(res_list_av)),res_list_av), columns=["epoch", "acc"])
         df_av.to_csv(save_dir+"accuracy_per_epoch_average_on_val_"+str(epoch)+".csv", index=None)
+
+        df_vid_acc = pd.DataFrame(zip(range(len(vid_acc_list)),vid_acc_list), columns=["epoch", "acc"])
+        df_vid_acc.to_csv(save_dir+"video_accuracy"+str(epoch)+".csv", index=None)
 
         fig = df.plot(kind='line', x='epoch', y='acc').get_figure()
         fig.savefig(save_dir+"accuracy_per_epoch_on_val_plt_"+str(epoch)+".jpg")
 
         fig = df_av.plot(kind='line', x='epoch', y='acc').get_figure()
         fig.savefig(save_dir+"accuracy_per_epoch_on_val_av_plt_"+str(epoch)+".jpg")
+
+        fig = df_vid_acc.plot(kind='line', x='epoch', y='acc').get_figure()
+        fig.savefig(save_dir+"video_accuracy_per_epoch_plt_"+str(epoch)+".jpg")
 
 
 if __name__ == '__main__':
