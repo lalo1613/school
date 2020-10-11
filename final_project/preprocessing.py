@@ -6,7 +6,6 @@ import os
 import re
 from tqdm import tqdm
 import torch
-import face_recognition
 from PIL import Image
 
 
@@ -56,6 +55,11 @@ def pre_process_dataset(input_path, set_str):
             success = getFrame(vidcap, sec, count, images_path)
 
     # capturing faces within the images
+    try:
+        import face_recognition
+    except Exception as exc:
+        print("Oops! you don't currently have the face_recognition package installed. "
+              "Please install it in order to continue pre-processing the data.")
     for video_name in tqdm(all_video_names):
         count = 1
         if "face_images_" + video_name not in os.listdir(input_path):
