@@ -8,12 +8,16 @@ import matplotlib
 matplotlib.use('Agg')
 import math
 import pickle
-from vgg_folder import vgg
+from final_project import vgg
 from tqdm import tqdm
-from DLcourse.preprocessing import pre_process_dataset
+from final_project.preprocessing import pre_process_dataset
 
-# save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
-save_dir = r"C:\Users\Bengal\Desktop\project\saving_dir/"
+# insert your desired saving path here:
+save_dir = r"C:\Users\omri_\Downloads\train_videos\saving_dir/"
+# insert path with train videos, or train data pre-processed pickle, here:
+train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
+# insert path with test videos, or test data pre-processed pickle, here:
+test_input_path = r"C:\Users\omri_\Downloads\test_videos/"
 
 model_names = 'vgg19'
 batch_size = 128
@@ -187,17 +191,6 @@ def our_loader(dataset, dataset_labels):
 
 def video_preds_acc(val_loader, val_video_labels, pred_model):
 
-    # todo comment out / delete
-
-    with open(r"C:\Users\Bengal\Desktop\project\saving_dir\2020_10_10_14_47_07_epoch1_data.pkl", 'rb') as file:
-        load_dict = pickle.load(file)
-    state_dict = load_dict.get("state_dict")
-    model = vgg.__dict__['vgg19']()
-    model.load_state_dict(state_dict)
-    pred_model = model
-    val_loader = test_loader
-    val_video_labels = test_video_labels
-
     all_outputs = []
     all_labels = []
     for i, (input, target) in tqdm(enumerate(val_loader)):
@@ -225,25 +218,12 @@ def main():
         os.makedirs(save_dir)
 
     model = vgg.__dict__['vgg19']()
-    # model.features = torch.nn.DataParallel(model.features)
-
-    # upload our data
-    print("Uploading Data")
-    # train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
-    # test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
-    # Chen path - need to inert the videos
-    train_input_path = r"C:\Users\Bengal\Desktop\project\train_videos/"
-    test_input_path = r"C:\Users\Bengal\Desktop\project\train_sample_videos/"
 
     train_dataset, train_dataset_labels, train_video_labels = pre_process_dataset(train_input_path, "train")
     test_dataset, test_dataset_labels, test_video_labels = pre_process_dataset(test_input_path, "test")
 
     train_loader = our_loader(train_dataset, train_dataset_labels)
     test_loader = our_loader(test_dataset, test_dataset_labels)
-
-    # todo Delete this 2 lines
-    # train_loader = train_loader[:5]
-    # test_loader = test_loader[:2]
 
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([1/0.835673, 1/0.164327]))
@@ -259,9 +239,6 @@ def main():
 
         # training model
         train(train_loader, model, criterion, optimizer, epoch)
-
-        # evaluate on train set
-        # prec1_train, prec1_current_train = validate(train_loader, model, criterion)
 
         # evaluate on validation set
         prec1, prec1_current = validate(test_loader, model, criterion)

@@ -6,7 +6,7 @@ import os
 import re
 from tqdm import tqdm
 import torch
-#import face_recognition
+import face_recognition
 from PIL import Image
 
 
@@ -29,6 +29,10 @@ def pre_process_dataset(input_path, set_str):
         return dataset, dataset_labels, video_labels
 
     metadata = pd.read_json(input_path+'metadata.json').T
+    from matplotlib import pyplot as plt
+    metadata.groupby('label')['label'].count().plot(figsize=(15, 5), kind='bar',
+                                                                 title='Distribution of Labels in the Training Set')
+    plt.show()
 
     # creating images from video at constant intervals
     all_video_names = [re.sub(".mp4","",img) for img in os.listdir(input_path) if re.findall(".mp4",img)]
@@ -105,23 +109,3 @@ def pre_process_dataset(input_path, set_str):
         pickle.dump({"dataset":dataset, "dataset_labels": dataset_labels, "video_belongings": video_names}, file)
 
     return dataset, dataset_labels, video_names
-
-
-# # loading test_input data
-# train_input_path = r"C:\Users\omri_\Downloads\train_videos/"
-# test_input_path = r"C:\Users\omri_\Downloads\train_sample_videos/"
-# # test_input_path = r"C:\Users\Bengal\Desktop\project/"
-#
-# train_set, train_labels = pre_process_dataset(train_input_path, "train")
-# test_set, test_labels = pre_process_dataset(test_input_path, "test")
-
-#
-# def grayConversion(image):
-#     grayValue = 0.07 * image[:,:,2] + 0.72 * image[:,:,1] + 0.21 * image[:,:,0]
-#     gray_img = grayValue.astype(np.uint8)
-#     return gray_img
-#
-#
-# img = cv2.imread(r"C:\Users\omri_\Downloads\train_videos\face_images_anzenqcwqo/face_image5.jpg")
-# temp = grayConversion(img)
-# cv2.imwrite(r"C:\Users\omri_\Downloads/gray_example.jpg", temp)
